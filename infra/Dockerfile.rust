@@ -1,7 +1,7 @@
 # ==============================================================================
 # Stage 1: Build the Rust API binary
 # ==============================================================================
-FROM rust:1.77-slim-bookworm AS builder
+FROM rust:1.85-slim-bookworm AS builder
 
 # Install system dependencies required by sqlx (OpenSSL, pkg-config) and curl
 RUN apt-get update && apt-get install -y --no-install-recommends \

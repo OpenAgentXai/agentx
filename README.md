@@ -61,8 +61,8 @@ Any MCP-compatible agent (Claude Desktop, Claude Code, or anything built on the 
 {
   "mcpServers": {
     "agentx": {
-      "command": "node",
-      "args": ["integrations/mcp-server/index.js"],
+      "command": "npx",
+      "args": ["-y", "agentx-mcp-server"],
       "env": {
         "AGENTX_API_URL": "http://localhost:8080",
         "AGENTX_API_KEY": "agx_..." // create one in the dashboard

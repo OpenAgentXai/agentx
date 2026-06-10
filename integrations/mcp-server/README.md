@@ -23,9 +23,13 @@ The server authenticates with an **agent API key** (created in the AgentX dashbo
 
 ## Setup
 
+Published on npm — no install needed:
+
 ```bash
-cd integrations/mcp-server && npm install
+npx -y agentx-mcp-server   # used via the MCP config below
 ```
+
+Or from source: `cd integrations/mcp-server && npm install`
 
 Claude Desktop / Claude Code configuration:
 

@@ -8,9 +8,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { toast, Toaster } from "sonner";
+import { useI18n } from "@/lib/i18n";
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { t } = useI18n();
   const { register, isLoading } = useAuthStore();
   const [form, setForm] = useState({
     name: "",
@@ -24,12 +26,12 @@ export default function RegisterPage() {
     e.preventDefault();
 
     if (form.password !== form.confirmPassword) {
-      toast.error("Passwords do not match");
+      toast.error(t("auth.passwordsDontMatch"));
       return;
     }
 
     if (form.password.length < 8) {
-      toast.error("Password must be at least 8 characters");
+      toast.error(t("auth.passwordMinLength"));
       return;
     }
 
@@ -37,7 +39,7 @@ export default function RegisterPage() {
       await register(form.email, form.password, form.name, form.organization_name);
       router.push("/dashboard");
     } catch (error: any) {
-      toast.error(error.response?.data?.error?.message || "Registration failed");
+      toast.error(error.response?.data?.error?.message || t("auth.registrationFailed"));
     }
   };
 
@@ -52,14 +54,14 @@ export default function RegisterPage() {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary-600 text-white font-bold text-2xl mb-4">
             AX
           </div>
-          <h1 className="text-3xl font-bold text-white">Create Account</h1>
-          <p className="text-zinc-400 mt-2">Start managing your AI agent identities</p>
+          <h1 className="text-3xl font-bold text-white">{t("auth.register")}</h1>
+          <p className="text-zinc-400 mt-2">{t("auth.registerSubtitle")}</p>
         </div>
 
         <Card className="dark:bg-zinc-900 dark:border-zinc-800">
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input
-              label="Full Name"
+              label={t("auth.fullName")}
               value={form.name}
               onChange={(e) => updateForm("name", e.target.value)}
               placeholder="John Doe"
@@ -67,7 +69,7 @@ export default function RegisterPage() {
             />
 
             <Input
-              label="Work Email"
+              label={t("auth.email")}
               type="email"
               value={form.email}
               onChange={(e) => updateForm("email", e.target.value)}
@@ -76,7 +78,7 @@ export default function RegisterPage() {
             />
 
             <Input
-              label="Organization Name"
+              label={t("auth.orgName")}
               value={form.organization_name}
               onChange={(e) => updateForm("organization_name", e.target.value)}
               placeholder="My Company"
@@ -84,7 +86,7 @@ export default function RegisterPage() {
             />
 
             <Input
-              label="Password"
+              label={t("auth.password")}
               type="password"
               value={form.password}
               onChange={(e) => updateForm("password", e.target.value)}
@@ -94,22 +96,22 @@ export default function RegisterPage() {
             />
 
             <Input
-              label="Confirm Password"
+              label={t("auth.confirmPassword")}
               type="password"
               value={form.confirmPassword}
               onChange={(e) => updateForm("confirmPassword", e.target.value)}
-              placeholder="Confirm your password"
+              placeholder={t("auth.confirmPassword")}
               required
             />
 
             <Button type="submit" className="w-full" size="lg" isLoading={isLoading}>
-              Create Account
+              {t("auth.register")}
             </Button>
 
             <p className="text-center text-sm text-zinc-500">
-              Already have an account?{" "}
+              {t("auth.hasAccount")}{" "}
               <Link href="/login" className="text-primary-400 hover:text-primary-300 font-medium">
-                Sign in
+                {t("auth.signIn")}
               </Link>
             </p>
           </form>

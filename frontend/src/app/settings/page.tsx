@@ -12,6 +12,7 @@ import { Select } from "@/components/ui/select";
 import { useAuthStore } from "@/stores/auth-store";
 import { authAPI, api } from "@/lib/api";
 import { toast } from "sonner";
+import { useI18n } from "@/lib/i18n";
 import {
   Settings,
   User,
@@ -44,14 +45,6 @@ interface TabConfig {
   icon: React.ElementType;
 }
 
-const tabs: TabConfig[] = [
-  { id: "account", label: "Account", icon: User },
-  { id: "security", label: "Security", icon: ShieldCheck },
-  { id: "organization", label: "Organization", icon: Building2 },
-  { id: "api", label: "API", icon: Key },
-  { id: "preferences", label: "Preferences", icon: Palette },
-];
-
 const languageOptions = [
   { value: "en", label: "English" },
   { value: "es", label: "Spanish" },
@@ -63,7 +56,16 @@ const languageOptions = [
 
 export default function SettingsPage() {
   const { user } = useAuthStore();
+  const { t } = useI18n();
   const [activeTab, setActiveTab] = useState<TabId>("account");
+
+  const tabs: TabConfig[] = [
+    { id: "account", label: "Account", icon: User },
+    { id: "security", label: t("settings.security"), icon: ShieldCheck },
+    { id: "organization", label: "Organization", icon: Building2 },
+    { id: "api", label: "API", icon: Key },
+    { id: "preferences", label: "Preferences", icon: Palette },
+  ];
 
   // Account state
   const [accountName, setAccountName] = useState(user?.name || "");
@@ -138,9 +140,9 @@ export default function SettingsPage() {
     setIsSavingAccount(true);
     try {
       await api.put("/users/me", { name: accountName });
-      toast.success("Account updated successfully");
+      toast.success(t("common.updatedSuccess"));
     } catch {
-      toast.error("Failed to update account");
+      toast.error(t("common.operationFailed"));
     }
     setIsSavingAccount(false);
   };
@@ -148,11 +150,11 @@ export default function SettingsPage() {
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newPassword !== confirmPassword) {
-      toast.error("Passwords do not match");
+      toast.error(t("auth.passwordsDontMatch"));
       return;
     }
     if (newPassword.length < 8) {
-      toast.error("Password must be at least 8 characters");
+      toast.error(t("auth.passwordMinLength"));
       return;
     }
     setIsChangingPassword(true);
@@ -166,7 +168,7 @@ export default function SettingsPage() {
       setNewPassword("");
       setConfirmPassword("");
     } catch {
-      toast.error("Failed to change password. Check your current password.");
+      toast.error(t("common.operationFailed"));
     }
     setIsChangingPassword(false);
   };
@@ -179,7 +181,7 @@ export default function SettingsPage() {
       setTotpSecret(data.secret || "");
       setShow2FAModal(true);
     } catch {
-      toast.error("Failed to set up 2FA");
+      toast.error(t("common.operationFailed"));
     }
   };
 
@@ -196,12 +198,12 @@ export default function SettingsPage() {
     setWebhooks([...webhooks, webhook]);
     setNewWebhookUrl("");
     setNewWebhookEvents("");
-    toast.success("Webhook added");
+    toast.success(t("common.createdSuccess"));
   };
 
   const handleRemoveWebhook = (id: string) => {
     setWebhooks(webhooks.filter((w) => w.id !== id));
-    toast.success("Webhook removed");
+    toast.success(t("common.deletedSuccess"));
   };
 
   const handleSaveApiSettings = async () => {
@@ -215,9 +217,9 @@ export default function SettingsPage() {
         global_rate_limit: globalRateLimit,
         global_daily_limit: globalDailyLimit,
       });
-      toast.success("API settings saved");
+      toast.success(t("common.updatedSuccess"));
     } catch {
-      toast.error("Failed to save API settings");
+      toast.error(t("common.operationFailed"));
     }
     setIsSavingApi(false);
   };
@@ -230,9 +232,9 @@ export default function SettingsPage() {
         alert_notifications: alertNotifications,
         audit_notifications: auditNotifications,
       });
-      toast.success("Preferences saved");
+      toast.success(t("common.updatedSuccess"));
     } catch {
-      toast.error("Failed to save preferences");
+      toast.error(t("common.operationFailed"));
     }
   };
 
@@ -249,10 +251,10 @@ export default function SettingsPage() {
         {/* Header */}
         <div>
           <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">
-            Settings
+            {t("settings.title")}
           </h1>
           <p className="text-zinc-500 mt-1">
-            Manage your account, security, and platform preferences
+            {t("settings.subtitle")}
           </p>
         </div>
 
@@ -306,7 +308,7 @@ export default function SettingsPage() {
 
                   <div className="space-y-4">
                     <Input
-                      label="Full Name"
+                      label={t("auth.fullName")}
                       value={accountName}
                       onChange={(e) => setAccountName(e.target.value)}
                       placeholder="Your name"
@@ -314,7 +316,7 @@ export default function SettingsPage() {
 
                     <div className="space-y-1.5">
                       <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                        Email Address
+                        {t("auth.email")}
                       </label>
                       <input
                         type="email"
@@ -345,7 +347,7 @@ export default function SettingsPage() {
                       isLoading={isSavingAccount}
                     >
                       <Save className="h-4 w-4" />
-                      Save Changes
+                      {t("common.save")}
                     </Button>
                   </div>
                 </div>
@@ -357,7 +359,7 @@ export default function SettingsPage() {
               <div className="space-y-6">
                 <Card>
                   <CardHeader
-                    title="Change Password"
+                    title={t("settings.changePassword")}
                     description="Update your password to keep your account secure"
                   />
                   <form
@@ -365,32 +367,32 @@ export default function SettingsPage() {
                     className="space-y-4"
                   >
                     <Input
-                      label="Current Password"
+                      label={t("settings.currentPassword")}
                       type="password"
                       value={currentPassword}
                       onChange={(e) => setCurrentPassword(e.target.value)}
-                      placeholder="Enter current password"
+                      placeholder={t("settings.currentPassword")}
                       required
                     />
                     <Input
-                      label="New Password"
+                      label={t("settings.newPassword")}
                       type="password"
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
-                      placeholder="Enter new password"
+                      placeholder={t("settings.newPassword")}
                       hint="Minimum 8 characters"
                       required
                     />
                     <Input
-                      label="Confirm New Password"
+                      label={t("settings.confirmNewPassword")}
                       type="password"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder="Confirm new password"
+                      placeholder={t("settings.confirmNewPassword")}
                       error={
                         confirmPassword &&
                         newPassword !== confirmPassword
-                          ? "Passwords do not match"
+                          ? t("auth.passwordsDontMatch")
                           : undefined
                       }
                       required
@@ -406,7 +408,7 @@ export default function SettingsPage() {
                         }
                       >
                         <Lock className="h-4 w-4" />
-                        Change Password
+                        {t("settings.changePassword")}
                       </Button>
                     </div>
                   </form>
@@ -414,7 +416,7 @@ export default function SettingsPage() {
 
                 <Card>
                   <CardHeader
-                    title="Two-Factor Authentication"
+                    title={t("auth.twoFactor")}
                     description="Add an extra layer of security to your account"
                   />
                   <div className="flex items-center justify-between p-4 rounded-lg bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700">
@@ -443,7 +445,7 @@ export default function SettingsPage() {
                           size="sm"
                           onClick={handleSetup2FA}
                         >
-                          Setup 2FA
+                          {t("settings.enable2fa")}
                         </Button>
                       )}
                     </div>
@@ -461,15 +463,15 @@ export default function SettingsPage() {
                 />
                 <div className="space-y-6">
                   <Input
-                    label="Organization Name"
+                    label={t("settings.orgName")}
                     value={orgName}
                     onChange={(e) => setOrgName(e.target.value)}
-                    placeholder="Your organization name"
+                    placeholder={t("settings.orgName")}
                   />
 
                   <div>
                     <p className="text-xs font-semibold uppercase text-zinc-400 mb-3">
-                      Organization Members
+                      {t("groups.members")}
                     </p>
                     <div className="space-y-2">
                       {/* Current user */}
@@ -502,16 +504,16 @@ export default function SettingsPage() {
                           await api.put("/organizations/me", {
                             name: orgName,
                           });
-                          toast.success("Organization updated");
+                          toast.success(t("common.updatedSuccess"));
                         } catch {
-                          toast.error("Failed to update organization");
+                          toast.error(t("common.operationFailed"));
                         }
                         setIsSavingOrg(false);
                       }}
                       isLoading={isSavingOrg}
                     >
                       <Save className="h-4 w-4" />
-                      Save Changes
+                      {t("common.save")}
                     </Button>
                   </div>
                 </div>
@@ -596,7 +598,7 @@ export default function SettingsPage() {
                   />
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Input
-                      label="Requests per minute"
+                      label={t("agents.rateLimit")}
                       type="number"
                       value={globalRateLimit}
                       onChange={(e) =>
@@ -606,7 +608,7 @@ export default function SettingsPage() {
                       max={100000}
                     />
                     <Input
-                      label="Requests per day"
+                      label={t("agents.dailyLimit")}
                       type="number"
                       value={globalDailyLimit}
                       onChange={(e) =>
@@ -622,7 +624,7 @@ export default function SettingsPage() {
                       isLoading={isSavingApi}
                     >
                       <Save className="h-4 w-4" />
-                      Save API Settings
+                      {t("common.save")}
                     </Button>
                   </div>
                 </Card>
@@ -640,23 +642,23 @@ export default function SettingsPage() {
                   <div className="space-y-4">
                     <div>
                       <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-3">
-                        Theme
+                        {t("settings.theme")}
                       </p>
                       <div className="grid grid-cols-3 gap-3">
                         {[
                           {
                             id: "light" as const,
-                            label: "Light",
+                            label: t("settings.light"),
                             icon: Sun,
                           },
                           {
                             id: "dark" as const,
-                            label: "Dark",
+                            label: t("settings.dark"),
                             icon: Moon,
                           },
                           {
                             id: "system" as const,
-                            label: "System",
+                            label: t("settings.system"),
                             icon: Monitor,
                           },
                         ].map((t) => (
@@ -679,7 +681,7 @@ export default function SettingsPage() {
                     </div>
 
                     <Select
-                      label="Language"
+                      label={t("settings.language")}
                       value={language}
                       onChange={(e) => setLanguage(e.target.value)}
                       options={languageOptions}
@@ -689,14 +691,14 @@ export default function SettingsPage() {
 
                 <Card>
                   <CardHeader
-                    title="Notifications"
+                    title={t("settings.notifications")}
                     description="Configure which notifications you receive"
                   />
                   <div className="space-y-3">
                     {[
                       {
                         key: "email",
-                        label: "Email Notifications",
+                        label: t("settings.emailNotifications"),
                         description:
                           "Receive important updates via email",
                         checked: emailNotifications,
@@ -704,7 +706,7 @@ export default function SettingsPage() {
                       },
                       {
                         key: "alerts",
-                        label: "Security Alerts",
+                        label: t("settings.alertNotifications"),
                         description:
                           "Get notified about security events and anomalies",
                         checked: alertNotifications,
@@ -761,7 +763,7 @@ export default function SettingsPage() {
                   <div className="flex justify-end pt-4 mt-4 border-t border-zinc-200 dark:border-zinc-700">
                     <Button onClick={handleSavePreferences}>
                       <Save className="h-4 w-4" />
-                      Save Preferences
+                      {t("common.save")}
                     </Button>
                   </div>
                 </Card>
@@ -775,7 +777,7 @@ export default function SettingsPage() {
       <Modal
         isOpen={show2FAModal}
         onClose={() => setShow2FAModal(false)}
-        title="Set Up Two-Factor Authentication"
+        title={t("settings.enable2fa")}
         description="Scan the QR code with your authenticator app"
       >
         <div className="space-y-4">
@@ -813,10 +815,10 @@ export default function SettingsPage() {
           )}
 
           <Input
-            label="Verification Code"
+            label={t("auth.verificationCode")}
             value={verificationCode}
             onChange={(e) => setVerificationCode(e.target.value)}
-            placeholder="Enter 6-digit code"
+            placeholder={t("auth.enterCode")}
             maxLength={6}
           />
 
@@ -825,7 +827,7 @@ export default function SettingsPage() {
               variant="secondary"
               onClick={() => setShow2FAModal(false)}
             >
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button
               onClick={async () => {
@@ -838,13 +840,13 @@ export default function SettingsPage() {
                   setShow2FAModal(false);
                   toast.success("Two-factor authentication enabled");
                 } catch {
-                  toast.error("Invalid verification code");
+                  toast.error(t("auth.invalidCode"));
                 }
               }}
               disabled={verificationCode.length !== 6}
             >
               <ShieldCheck className="h-4 w-4" />
-              Verify & Enable
+              {t("auth.verify")}
             </Button>
           </div>
         </div>

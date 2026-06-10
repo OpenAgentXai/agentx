@@ -8,9 +8,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Toaster, toast } from "sonner";
+import { useI18n } from "@/lib/i18n";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { t } = useI18n();
   const { login, verify2FA, isLoading, requires2FA } = useAuthStore();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -24,7 +26,7 @@ export default function LoginPage() {
         router.push("/dashboard");
       }
     } catch (error: any) {
-      toast.error(error.response?.data?.error?.message || "Login failed");
+      toast.error(error.response?.data?.error?.message || t("auth.loginFailed"));
     }
   };
 
@@ -34,7 +36,7 @@ export default function LoginPage() {
       await verify2FA(totpCode);
       router.push("/dashboard");
     } catch (error: any) {
-      toast.error(error.response?.data?.error?.message || "Invalid 2FA code");
+      toast.error(error.response?.data?.error?.message || t("auth.invalidCode"));
     }
   };
 
@@ -53,10 +55,10 @@ export default function LoginPage() {
         <Card className="dark:bg-zinc-900 dark:border-zinc-800">
           {!requires2FA ? (
             <form onSubmit={handleLogin} className="space-y-5">
-              <h2 className="text-xl font-semibold text-white">Sign in</h2>
+              <h2 className="text-xl font-semibold text-white">{t("auth.signIn")}</h2>
 
               <Input
-                label="Email"
+                label={t("auth.email")}
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -65,44 +67,44 @@ export default function LoginPage() {
               />
 
               <Input
-                label="Password"
+                label={t("auth.password")}
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
+                placeholder={t("auth.password")}
                 required
               />
 
               <div className="flex items-center justify-between">
                 <label className="flex items-center gap-2 text-sm text-zinc-400">
                   <input type="checkbox" className="rounded border-zinc-600" />
-                  Remember me
+                  {t("auth.rememberMe")}
                 </label>
                 <Link href="/forgot-password" className="text-sm text-primary-400 hover:text-primary-300">
-                  Forgot password?
+                  {t("auth.forgotPassword")}
                 </Link>
               </div>
 
               <Button type="submit" className="w-full" isLoading={isLoading}>
-                Sign in
+                {t("auth.signIn")}
               </Button>
 
               <p className="text-center text-sm text-zinc-500">
-                Don&apos;t have an account?{" "}
+                {t("auth.noAccount")}{" "}
                 <Link href="/register" className="text-primary-400 hover:text-primary-300 font-medium">
-                  Sign up
+                  {t("auth.signUp")}
                 </Link>
               </p>
             </form>
           ) : (
             <form onSubmit={handle2FA} className="space-y-5">
-              <h2 className="text-xl font-semibold text-white">Two-Factor Authentication</h2>
+              <h2 className="text-xl font-semibold text-white">{t("auth.twoFactor")}</h2>
               <p className="text-sm text-zinc-400">
-                Enter the 6-digit code from your authenticator app.
+                {t("auth.enterCode")}
               </p>
 
               <Input
-                label="Verification Code"
+                label={t("auth.verificationCode")}
                 type="text"
                 value={totpCode}
                 onChange={(e) => setTotpCode(e.target.value)}
@@ -113,7 +115,7 @@ export default function LoginPage() {
               />
 
               <Button type="submit" className="w-full" isLoading={isLoading}>
-                Verify
+                {t("auth.verify")}
               </Button>
             </form>
           )}

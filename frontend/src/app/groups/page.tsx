@@ -14,6 +14,7 @@ import { useAgents } from "@/hooks/use-agents";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { groupsAPI } from "@/lib/api";
 import { formatRelativeTime, capitalize } from "@/lib/utils";
+import { useI18n } from "@/lib/i18n";
 import { toast } from "sonner";
 import {
   Plus,
@@ -48,6 +49,7 @@ interface GroupMember {
 }
 
 export default function GroupsPage() {
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [showCreate, setShowCreate] = useState(false);
@@ -94,12 +96,12 @@ export default function GroupsPage() {
     mutationFn: (data: Record<string, unknown>) => groupsAPI.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["groups"] });
-      toast.success("Group created successfully");
+      toast.success(t("common.createdSuccess"));
       setShowCreate(false);
       setNewGroup({ name: "", description: "" });
     },
     onError: () => {
-      toast.error("Failed to create group");
+      toast.error(t("common.operationFailed"));
     },
   });
 
@@ -108,10 +110,10 @@ export default function GroupsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["groups"] });
       if (selectedGroup) setSelectedGroup(null);
-      toast.success("Group deleted");
+      toast.success(t("common.deletedSuccess"));
     },
     onError: () => {
-      toast.error("Failed to delete group");
+      toast.error(t("common.operationFailed"));
     },
   });
 
@@ -133,7 +135,7 @@ export default function GroupsPage() {
       setAddAgentId("");
     },
     onError: () => {
-      toast.error("Failed to add agent to group");
+      toast.error(t("common.operationFailed"));
     },
   });
 
@@ -153,7 +155,7 @@ export default function GroupsPage() {
       toast.success("Agent removed from group");
     },
     onError: () => {
-      toast.error("Failed to remove agent from group");
+      toast.error(t("common.operationFailed"));
     },
   });
 
@@ -177,7 +179,7 @@ export default function GroupsPage() {
   const columns = [
     {
       key: "name",
-      header: "Group",
+      header: t("groups.title"),
       render: (group: Group) => (
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-lg bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">
@@ -188,7 +190,7 @@ export default function GroupsPage() {
               {group.name}
             </p>
             <p className="text-xs text-zinc-500 max-w-[250px] truncate">
-              {group.description || "No description"}
+              {group.description || t("common.noDescription")}
             </p>
           </div>
         </div>
@@ -196,18 +198,18 @@ export default function GroupsPage() {
     },
     {
       key: "member_count",
-      header: "Members",
+      header: t("groups.members"),
       render: (group: Group) => (
         <div className="flex items-center gap-2">
           <Badge variant="default">
-            {group.member_count || 0} agent{(group.member_count || 0) !== 1 ? "s" : ""}
+            {group.member_count || 0} {t("groups.memberCount")}
           </Badge>
         </div>
       ),
     },
     {
       key: "created_at",
-      header: "Created",
+      header: t("common.created"),
       render: (group: Group) => (
         <span className="text-sm text-zinc-500">
           {formatRelativeTime(group.created_at)}
@@ -233,7 +235,7 @@ export default function GroupsPage() {
           <button
             onClick={(e) => {
               e.stopPropagation();
-              if (confirm("Are you sure you want to delete this group?")) {
+              if (confirm(t("common.confirmDelete"))) {
                 deleteGroup.mutate(group.id);
               }
             }}
@@ -255,15 +257,15 @@ export default function GroupsPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">
-              Groups
+              {t("groups.title")}
             </h1>
             <p className="text-zinc-500 mt-1">
-              Organize agents into groups for collective policy management
+              {t("groups.subtitle")}
             </p>
           </div>
           <Button onClick={() => setShowCreate(true)}>
             <Plus className="h-4 w-4" />
-            Create Group
+            {t("groups.createGroup")}
           </Button>
         </div>
 
@@ -276,7 +278,7 @@ export default function GroupsPage() {
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
                   <input
                     type="text"
-                    placeholder="Search groups..."
+                    placeholder={t("groups.searchPlaceholder")}
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     className="w-full pl-10 pr-4 py-2.5 text-sm rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none"
@@ -294,7 +296,7 @@ export default function GroupsPage() {
                     selectedGroup === g.id ? null : g.id
                   )
                 }
-                emptyMessage="No groups found. Create your first group to organize agents."
+                emptyMessage={t("groups.noGroups")}
               />
             </Card>
           </div>
@@ -306,7 +308,7 @@ export default function GroupsPage() {
                 <CardHeader
                   title={selectedGroupSummary.name}
                   description={
-                    selectedGroupSummary.description || "No description"
+                    selectedGroupSummary.description || t("common.noDescription")
                   }
                   action={
                     <button
@@ -321,7 +323,7 @@ export default function GroupsPage() {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <p className="text-xs font-semibold uppercase text-zinc-400">
-                      Members ({(groupDetail?.members || []).length})
+                      {t("groups.members")} ({(groupDetail?.members || []).length})
                     </p>
                     <Button
                       variant="ghost"
@@ -329,7 +331,7 @@ export default function GroupsPage() {
                       onClick={() => setShowAddAgent(true)}
                     >
                       <UserPlus className="h-3.5 w-3.5" />
-                      Add Agent
+                      {t("groups.addAgent")}
                     </Button>
                   </div>
 
@@ -379,7 +381,7 @@ export default function GroupsPage() {
                             })
                           }
                           className="p-1.5 rounded-lg text-zinc-400 hover:text-danger-600 hover:bg-danger-50 dark:hover:bg-danger-950 transition-colors"
-                          title="Remove from group"
+                          title={t("groups.removeAgent")}
                         >
                           <UserMinus className="h-4 w-4" />
                         </button>
@@ -389,7 +391,7 @@ export default function GroupsPage() {
 
                   <div className="pt-3 border-t border-zinc-200 dark:border-zinc-700">
                     <p className="text-xs text-zinc-400">
-                      Created{" "}
+                      {t("common.created")}{" "}
                       {formatRelativeTime(selectedGroupSummary.created_at)}
                     </p>
                   </div>
@@ -414,12 +416,12 @@ export default function GroupsPage() {
       <Modal
         isOpen={showCreate}
         onClose={() => setShowCreate(false)}
-        title="Create New Group"
-        description="Organize agents into groups for shared policy management"
+        title={t("groups.createGroup")}
+        description={t("groups.subtitle")}
       >
         <form onSubmit={handleCreate} className="space-y-4">
           <Input
-            label="Group Name"
+            label={t("groups.groupName")}
             value={newGroup.name}
             onChange={(e) =>
               setNewGroup((p) => ({ ...p, name: e.target.value }))
@@ -429,7 +431,7 @@ export default function GroupsPage() {
           />
 
           <Input
-            label="Description"
+            label={t("common.description")}
             value={newGroup.description}
             onChange={(e) =>
               setNewGroup((p) => ({ ...p, description: e.target.value }))
@@ -443,10 +445,10 @@ export default function GroupsPage() {
               type="button"
               onClick={() => setShowCreate(false)}
             >
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button type="submit" isLoading={createGroup.isPending}>
-              Create Group
+              {t("groups.createGroup")}
             </Button>
           </div>
         </form>
@@ -456,7 +458,7 @@ export default function GroupsPage() {
       <Modal
         isOpen={showAddAgent}
         onClose={() => setShowAddAgent(false)}
-        title="Add Agent to Group"
+        title={t("groups.addAgent")}
         description="Select an agent to add to this group"
         size="sm"
       >
@@ -475,7 +477,7 @@ export default function GroupsPage() {
               type="button"
               onClick={() => setShowAddAgent(false)}
             >
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button
               type="submit"
@@ -483,7 +485,7 @@ export default function GroupsPage() {
               disabled={!addAgentId}
             >
               <UserPlus className="h-4 w-4" />
-              Add Agent
+              {t("groups.addAgent")}
             </Button>
           </div>
         </form>

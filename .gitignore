@@ -24,3 +24,6 @@ __pycache__/
 
 # Local Netlify folder
 .netlify
+
+# TS build cache
+frontend/tsconfig.tsbuildinfo

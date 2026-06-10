@@ -20,6 +20,7 @@ import {
   downloadFile,
 } from "@/lib/utils";
 import { toast } from "sonner";
+import { useI18n } from "@/lib/i18n";
 import {
   ScrollText,
   Search,
@@ -73,26 +74,6 @@ const actorTypeOptions = [
   { value: "system", label: "System" },
 ];
 
-const statusFilterOptions = [
-  { value: "", label: "All Statuses" },
-  { value: "success", label: "Success" },
-  { value: "failure", label: "Failure" },
-  { value: "denied", label: "Denied" },
-];
-
-const actionFilterOptions = [
-  { value: "", label: "All Actions" },
-  { value: "create", label: "Create" },
-  { value: "read", label: "Read" },
-  { value: "update", label: "Update" },
-  { value: "delete", label: "Delete" },
-  { value: "login", label: "Login" },
-  { value: "logout", label: "Logout" },
-  { value: "suspend", label: "Suspend" },
-  { value: "activate", label: "Activate" },
-  { value: "revoke", label: "Revoke" },
-];
-
 const statusVariant: Record<string, "success" | "danger" | "warning"> = {
   success: "success",
   failure: "danger",
@@ -107,6 +88,7 @@ const severityVariant: Record<string, "info" | "warning" | "danger"> = {
 };
 
 export default function AuditPage() {
+  const { t } = useI18n();
   const [showFilters, setShowFilters] = useState(false);
   const [expandedLog, setExpandedLog] = useState<string | null>(null);
   const [filters, setFilters] = useState({
@@ -188,7 +170,7 @@ export default function AuditPage() {
       }
       toast.success(`Audit logs exported as ${format.toUpperCase()}`);
     } catch {
-      toast.error("Failed to export audit logs");
+      toast.error(t("common.operationFailed"));
     }
   };
 
@@ -214,10 +196,30 @@ export default function AuditPage() {
     }
   };
 
+  const statusFilterOptions = [
+    { value: "", label: "All Statuses" },
+    { value: "success", label: t("audit.success") },
+    { value: "failure", label: t("audit.failure") },
+    { value: "denied", label: t("audit.denied") },
+  ];
+
+  const actionFilterOptions = [
+    { value: "", label: "All Actions" },
+    { value: "create", label: t("common.create") },
+    { value: "read", label: "Read" },
+    { value: "update", label: "Update" },
+    { value: "delete", label: t("common.delete") },
+    { value: "login", label: "Login" },
+    { value: "logout", label: t("nav.logout") },
+    { value: "suspend", label: t("agents.suspend") },
+    { value: "activate", label: t("agents.activate") },
+    { value: "revoke", label: t("agents.revoke") },
+  ];
+
   const columns = [
     {
       key: "created_at",
-      header: "Timestamp",
+      header: t("audit.timestamp"),
       render: (log: AuditLog) => (
         <div className="flex items-center gap-2">
           <Clock className="h-3.5 w-3.5 text-zinc-400" />
@@ -234,7 +236,7 @@ export default function AuditPage() {
     },
     {
       key: "actor",
-      header: "Actor",
+      header: t("audit.actor"),
       render: (log: AuditLog) => (
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
@@ -253,7 +255,7 @@ export default function AuditPage() {
     },
     {
       key: "action",
-      header: "Action",
+      header: t("audit.action"),
       render: (log: AuditLog) => (
         <span className="text-sm font-mono text-zinc-700 dark:text-zinc-300">
           {log.action}
@@ -262,7 +264,7 @@ export default function AuditPage() {
     },
     {
       key: "resource",
-      header: "Resource",
+      header: t("audit.resource"),
       render: (log: AuditLog) => (
         <div>
           <p className="text-sm text-zinc-700 dark:text-zinc-300">
@@ -276,7 +278,7 @@ export default function AuditPage() {
     },
     {
       key: "status",
-      header: "Status",
+      header: t("audit.status"),
       render: (log: AuditLog) => (
         <div className="flex items-center gap-1.5">
           <StatusIcon status={log.status} />
@@ -314,16 +316,16 @@ export default function AuditPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">
-              Audit & Logs
+              {t("audit.title")}
             </h1>
             <p className="text-zinc-500 mt-1">
-              Real-time audit trail and security alerts
+              {t("audit.subtitle")}
             </p>
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={() => refetch()}>
               <RefreshCw className="h-4 w-4" />
-              Refresh
+              {t("common.refresh")}
             </Button>
             <Button
               variant="outline"
@@ -331,7 +333,7 @@ export default function AuditPage() {
               onClick={() => handleExport("json")}
             >
               <FileJson className="h-4 w-4" />
-              JSON
+              {t("audit.exportJson")}
             </Button>
             <Button
               variant="outline"
@@ -339,7 +341,7 @@ export default function AuditPage() {
               onClick={() => handleExport("csv")}
             >
               <FileSpreadsheet className="h-4 w-4" />
-              CSV
+              {t("audit.exportCsv")}
             </Button>
           </div>
         </div>
@@ -348,7 +350,7 @@ export default function AuditPage() {
         {activeAlerts.length > 0 && (
           <Card className="border-warning-300 dark:border-warning-700">
             <CardHeader
-              title="Active Alerts"
+              title={t("audit.alerts")}
               description={`${activeAlerts.length} unresolved alert${activeAlerts.length !== 1 ? "s" : ""} requiring attention`}
               action={
                 <Badge variant="warning">
@@ -407,7 +409,7 @@ export default function AuditPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
               <input
                 type="text"
-                placeholder="Search logs by actor, action, resource..."
+                placeholder={t("audit.searchPlaceholder")}
                 value={filters.search}
                 onChange={(e) =>
                   setFilters((f) => ({ ...f, search: e.target.value }))
@@ -421,7 +423,7 @@ export default function AuditPage() {
               onClick={() => setShowFilters(!showFilters)}
             >
               <Filter className="h-4 w-4" />
-              Filters
+              {t("common.filters")}
               {(filters.actor_type ||
                 filters.action ||
                 filters.status ||
@@ -435,7 +437,7 @@ export default function AuditPage() {
           {showFilters && (
             <div className="mt-4 pt-4 border-t border-zinc-200 dark:border-zinc-700 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
               <Select
-                label="Actor Type"
+                label={t("audit.actor")}
                 value={filters.actor_type}
                 onChange={(e) =>
                   setFilters((f) => ({ ...f, actor_type: e.target.value }))
@@ -443,7 +445,7 @@ export default function AuditPage() {
                 options={actorTypeOptions}
               />
               <Select
-                label="Action"
+                label={t("audit.action")}
                 value={filters.action}
                 onChange={(e) =>
                   setFilters((f) => ({ ...f, action: e.target.value }))
@@ -451,7 +453,7 @@ export default function AuditPage() {
                 options={actionFilterOptions}
               />
               <Select
-                label="Status"
+                label={t("audit.status")}
                 value={filters.status}
                 onChange={(e) =>
                   setFilters((f) => ({ ...f, status: e.target.value }))
@@ -486,17 +488,17 @@ export default function AuditPage() {
               <span className="text-xs text-zinc-400">Active filters:</span>
               {filters.actor_type && (
                 <Badge variant="info">
-                  Actor: {capitalize(filters.actor_type)}
+                  {t("audit.actor")}: {capitalize(filters.actor_type)}
                 </Badge>
               )}
               {filters.action && (
                 <Badge variant="info">
-                  Action: {capitalize(filters.action)}
+                  {t("audit.action")}: {capitalize(filters.action)}
                 </Badge>
               )}
               {filters.status && (
                 <Badge variant="info">
-                  Status: {capitalize(filters.status)}
+                  {t("audit.status")}: {capitalize(filters.status)}
                 </Badge>
               )}
               {filters.date_from && (
@@ -530,7 +532,7 @@ export default function AuditPage() {
             <div className="flex items-center gap-2">
               <ScrollText className="h-5 w-5 text-zinc-400" />
               <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                Audit Log Feed
+                {t("audit.title")}
               </span>
               <Badge variant="default">{logs.length} entries</Badge>
             </div>
@@ -544,7 +546,7 @@ export default function AuditPage() {
             onRowClick={(log: AuditLog) =>
               setExpandedLog(expandedLog === log.id ? null : log.id)
             }
-            emptyMessage="No audit logs found matching your filters."
+            emptyMessage={t("audit.noLogs")}
           />
 
           {/* Expanded Log Details */}
@@ -602,7 +604,7 @@ export default function AuditPage() {
                     {log.details && Object.keys(log.details).length > 0 && (
                       <div>
                         <p className="text-xs font-semibold uppercase text-zinc-400 mb-1">
-                          Details
+                          {t("audit.details")}
                         </p>
                         <pre className="text-xs bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 p-3 rounded-lg font-mono overflow-x-auto max-h-48 overflow-y-auto">
                           {JSON.stringify(log.details, null, 2)}

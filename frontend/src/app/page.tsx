@@ -3,9 +3,11 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth-store";
+import { useI18n } from "@/lib/i18n";
 
 export default function Home() {
   const router = useRouter();
+  const { t } = useI18n();
   const { checkAuth } = useAuthStore();
 
   useEffect(() => {
@@ -22,7 +24,7 @@ export default function Home() {
         <div className="w-16 h-16 rounded-2xl bg-primary-600 flex items-center justify-center text-white font-bold text-2xl">
           AX
         </div>
-        <p className="text-zinc-400 animate-pulse">Loading AgentX...</p>
+        <p className="text-zinc-400 animate-pulse">{t("common.loading")}</p>
       </div>
     </div>
   );

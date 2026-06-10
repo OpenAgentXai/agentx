@@ -14,6 +14,7 @@ import { useAgents } from "@/hooks/use-agents";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { sandboxesAPI } from "@/lib/api";
 import { formatRelativeTime, capitalize } from "@/lib/utils";
+import { useI18n } from "@/lib/i18n";
 import { toast } from "sonner";
 import {
   Plus,
@@ -72,26 +73,28 @@ interface SandboxMetrics {
   timestamps: string[];
 }
 
-const modeOptions = [
-  { value: "production", label: "Production" },
-  { value: "dry_run", label: "Dry Run" },
-  { value: "testing", label: "Testing" },
-];
-
 const modeVariant: Record<string, "success" | "warning" | "info"> = {
   production: "success",
   dry_run: "warning",
   testing: "info",
 };
 
-const modeLabel: Record<string, string> = {
-  production: "Production",
-  dry_run: "Dry Run",
-  testing: "Testing",
-};
-
 export default function SandboxesPage() {
+  const { t } = useI18n();
   const queryClient = useQueryClient();
+
+  const modeOptions = [
+    { value: "production", label: "Production" },
+    { value: "dry_run", label: t("sandboxes.dryRun") },
+    { value: "testing", label: "Testing" },
+  ];
+
+  const modeLabel: Record<string, string> = {
+    production: "Production",
+    dry_run: t("sandboxes.dryRun"),
+    testing: "Testing",
+  };
+
   const [search, setSearch] = useState("");
   const [showCreate, setShowCreate] = useState(false);
   const [selectedSandbox, setSelectedSandbox] = useState<string | null>(null);
@@ -113,7 +116,7 @@ export default function SandboxesPage() {
   const agents = agentsData?.data || [];
 
   const agentOptions = [
-    { value: "", label: "None (unlinked)" },
+    { value: "", label: t("common.none") },
     ...agents.map((a: any) => ({ value: a.id, label: a.name })),
   ];
 
@@ -151,7 +154,7 @@ export default function SandboxesPage() {
     mutationFn: (data: Record<string, unknown>) => sandboxesAPI.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["sandboxes"] });
-      toast.success("Sandbox created successfully");
+      toast.success(t("common.createdSuccess"));
       setShowCreate(false);
       setNewSandbox({
         name: "",
@@ -164,7 +167,7 @@ export default function SandboxesPage() {
       });
     },
     onError: () => {
-      toast.error("Failed to create sandbox");
+      toast.error(t("common.operationFailed"));
     },
   });
 
@@ -173,10 +176,10 @@ export default function SandboxesPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["sandboxes"] });
       if (selectedSandbox) setSelectedSandbox(null);
-      toast.success("Sandbox deleted");
+      toast.success(t("common.deletedSuccess"));
     },
     onError: () => {
-      toast.error("Failed to delete sandbox");
+      toast.error(t("common.operationFailed"));
     },
   });
 
@@ -190,7 +193,7 @@ export default function SandboxesPage() {
       setSnapshotName("");
     },
     onError: () => {
-      toast.error("Failed to create snapshot");
+      toast.error(t("common.operationFailed"));
     },
   });
 
@@ -207,7 +210,7 @@ export default function SandboxesPage() {
       toast.success("Snapshot restored");
     },
     onError: () => {
-      toast.error("Failed to restore snapshot");
+      toast.error(t("common.operationFailed"));
     },
   });
 
@@ -229,7 +232,7 @@ export default function SandboxesPage() {
   const columns = [
     {
       key: "name",
-      header: "Sandbox",
+      header: t("sandboxes.title"),
       render: (sandbox: Sandbox) => (
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-lg bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">
@@ -240,7 +243,7 @@ export default function SandboxesPage() {
               {sandbox.name}
             </p>
             <p className="text-xs text-zinc-500 max-w-[200px] truncate">
-              {sandbox.description || "No description"}
+              {sandbox.description || t("common.noDescription")}
             </p>
           </div>
         </div>
@@ -248,7 +251,7 @@ export default function SandboxesPage() {
     },
     {
       key: "mode",
-      header: "Mode",
+      header: t("sandboxes.mode"),
       render: (sandbox: Sandbox) => (
         <Badge variant={modeVariant[sandbox.mode] || "default"}>
           {modeLabel[sandbox.mode] || capitalize(sandbox.mode)}
@@ -257,7 +260,7 @@ export default function SandboxesPage() {
     },
     {
       key: "status",
-      header: "Status",
+      header: t("common.status"),
       render: (sandbox: Sandbox) => (
         <Badge
           variant={
@@ -286,7 +289,7 @@ export default function SandboxesPage() {
     },
     {
       key: "resource_limits",
-      header: "Resource Limits",
+      header: t("sandboxes.resourceLimits"),
       render: (sandbox: Sandbox) => {
         const limits = sandbox.resource_limits;
         if (!limits) return <span className="text-zinc-400">-</span>;
@@ -301,14 +304,14 @@ export default function SandboxesPage() {
             </span>
             <span
               className="text-xs bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded"
-              title="Memory MB"
+              title={t("sandboxes.memoryLimit")}
             >
               <HardDrive className="h-3 w-3 inline mr-1" />
               {limits.max_memory_mb}MB
             </span>
             <span
               className="text-xs bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded"
-              title="CPU %"
+              title={t("sandboxes.cpuLimit")}
             >
               <Cpu className="h-3 w-3 inline mr-1" />
               {limits.max_cpu_percent}%
@@ -324,7 +327,7 @@ export default function SandboxesPage() {
         <button
           onClick={(e) => {
             e.stopPropagation();
-            if (confirm("Are you sure you want to delete this sandbox?")) {
+            if (confirm(t("common.confirmDelete"))) {
               deleteSandbox.mutate(sandbox.id);
             }
           }}
@@ -343,15 +346,15 @@ export default function SandboxesPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">
-              Sandboxes
+              {t("sandboxes.title")}
             </h1>
             <p className="text-zinc-500 mt-1">
-              Isolated environments for testing and running agents
+              {t("sandboxes.subtitle")}
             </p>
           </div>
           <Button onClick={() => setShowCreate(true)}>
             <Plus className="h-4 w-4" />
-            Create Sandbox
+            {t("sandboxes.createSandbox")}
           </Button>
         </div>
 
@@ -362,7 +365,7 @@ export default function SandboxesPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
               <input
                 type="text"
-                placeholder="Search sandboxes..."
+                placeholder={t("sandboxes.searchPlaceholder")}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="w-full pl-10 pr-4 py-2.5 text-sm rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none"
@@ -378,7 +381,7 @@ export default function SandboxesPage() {
             onRowClick={(s: Sandbox) =>
               setSelectedSandbox(selectedSandbox === s.id ? null : s.id)
             }
-            emptyMessage="No sandboxes found. Create your first sandbox to get started."
+            emptyMessage={t("sandboxes.noSandboxes")}
           />
         </Card>
 
@@ -407,7 +410,7 @@ export default function SandboxesPage() {
                   </p>
                   <div className="space-y-2">
                     <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-zinc-50 dark:bg-zinc-800/50">
-                      <span className="text-sm text-zinc-500">Mode</span>
+                      <span className="text-sm text-zinc-500">{t("sandboxes.mode")}</span>
                       <Badge
                         variant={
                           modeVariant[selectedSandboxData.mode] || "default"
@@ -418,7 +421,7 @@ export default function SandboxesPage() {
                       </Badge>
                     </div>
                     <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-zinc-50 dark:bg-zinc-800/50">
-                      <span className="text-sm text-zinc-500">Status</span>
+                      <span className="text-sm text-zinc-500">{t("common.status")}</span>
                       <Badge
                         variant={
                           selectedSandboxData.status === "running"
@@ -439,7 +442,7 @@ export default function SandboxesPage() {
                       </span>
                     </div>
                     <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-zinc-50 dark:bg-zinc-800/50">
-                      <span className="text-sm text-zinc-500">Memory</span>
+                      <span className="text-sm text-zinc-500">{t("sandboxes.memoryLimit")}</span>
                       <span className="text-sm font-mono text-zinc-900 dark:text-zinc-100">
                         {selectedSandboxData.resource_limits?.max_memory_mb ||
                           "-"}{" "}
@@ -447,7 +450,7 @@ export default function SandboxesPage() {
                       </span>
                     </div>
                     <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-zinc-50 dark:bg-zinc-800/50">
-                      <span className="text-sm text-zinc-500">CPU</span>
+                      <span className="text-sm text-zinc-500">{t("sandboxes.cpuLimit")}</span>
                       <span className="text-sm font-mono text-zinc-900 dark:text-zinc-100">
                         {selectedSandboxData.resource_limits?.max_cpu_percent ||
                           "-"}
@@ -461,7 +464,7 @@ export default function SandboxesPage() {
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-xs font-semibold uppercase text-zinc-400">
-                      Snapshots
+                      {t("sandboxes.snapshots")}
                     </p>
                     <Button
                       variant="ghost"
@@ -469,7 +472,7 @@ export default function SandboxesPage() {
                       onClick={() => setShowSnapshotModal(true)}
                     >
                       <Camera className="h-3.5 w-3.5" />
-                      Create Snapshot
+                      {t("sandboxes.createSnapshot")}
                     </Button>
                   </div>
                   <div className="space-y-2">
@@ -504,7 +507,7 @@ export default function SandboxesPage() {
                           isLoading={restoreSnapshot.isPending}
                         >
                           <RotateCcw className="h-3.5 w-3.5" />
-                          Restore
+                          {t("sandboxes.restore")}
                         </Button>
                       </div>
                     ))}
@@ -515,7 +518,7 @@ export default function SandboxesPage() {
               {/* Metrics Chart */}
               <div className="space-y-4">
                 <p className="text-xs font-semibold uppercase text-zinc-400">
-                  Resource Metrics
+                  {t("agents.metrics")}
                 </p>
                 {metricsChartData.length > 0 ? (
                   <div className="h-64">
@@ -563,7 +566,7 @@ export default function SandboxesPage() {
                           fill="#f59e0b"
                           fillOpacity={0.1}
                           strokeWidth={2}
-                          name="Requests"
+                          name={t("common.requests")}
                         />
                       </AreaChart>
                     </ResponsiveContainer>
@@ -572,7 +575,7 @@ export default function SandboxesPage() {
                   <div className="h-64 flex items-center justify-center text-zinc-400">
                     <div className="text-center">
                       <Activity className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                      <p className="text-sm">No metrics data available</p>
+                      <p className="text-sm">{t("common.noData")}</p>
                     </div>
                   </div>
                 )}
@@ -586,13 +589,13 @@ export default function SandboxesPage() {
       <Modal
         isOpen={showCreate}
         onClose={() => setShowCreate(false)}
-        title="Create New Sandbox"
-        description="Set up an isolated environment for agent testing and execution"
+        title={t("sandboxes.createSandbox")}
+        description={t("sandboxes.subtitle")}
         size="lg"
       >
         <form onSubmit={handleCreate} className="space-y-4">
           <Input
-            label="Sandbox Name"
+            label={t("sandboxes.sandboxName")}
             value={newSandbox.name}
             onChange={(e) =>
               setNewSandbox((p) => ({ ...p, name: e.target.value }))
@@ -602,7 +605,7 @@ export default function SandboxesPage() {
           />
 
           <Input
-            label="Description"
+            label={t("common.description")}
             value={newSandbox.description}
             onChange={(e) =>
               setNewSandbox((p) => ({ ...p, description: e.target.value }))
@@ -611,7 +614,7 @@ export default function SandboxesPage() {
           />
 
           <Select
-            label="Mode"
+            label={t("sandboxes.mode")}
             value={newSandbox.mode}
             onChange={(e) =>
               setNewSandbox((p) => ({ ...p, mode: e.target.value }))
@@ -630,7 +633,7 @@ export default function SandboxesPage() {
 
           <div>
             <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-3">
-              Resource Limits
+              {t("sandboxes.resourceLimits")}
             </p>
             <div className="grid grid-cols-3 gap-4">
               <Input
@@ -647,7 +650,7 @@ export default function SandboxesPage() {
                 max={10000}
               />
               <Input
-                label="Memory (MB)"
+                label={t("sandboxes.memoryLimit")}
                 type="number"
                 value={newSandbox.max_memory_mb}
                 onChange={(e) =>
@@ -660,7 +663,7 @@ export default function SandboxesPage() {
                 max={16384}
               />
               <Input
-                label="CPU (%)"
+                label={t("sandboxes.cpuLimit")}
                 type="number"
                 value={newSandbox.max_cpu_percent}
                 onChange={(e) =>
@@ -681,10 +684,10 @@ export default function SandboxesPage() {
               type="button"
               onClick={() => setShowCreate(false)}
             >
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button type="submit" isLoading={createSandbox.isPending}>
-              Create Sandbox
+              {t("sandboxes.createSandbox")}
             </Button>
           </div>
         </form>
@@ -694,7 +697,7 @@ export default function SandboxesPage() {
       <Modal
         isOpen={showSnapshotModal}
         onClose={() => setShowSnapshotModal(false)}
-        title="Create Snapshot"
+        title={t("sandboxes.createSnapshot")}
         description="Save the current state of this sandbox"
         size="sm"
       >
@@ -723,11 +726,11 @@ export default function SandboxesPage() {
               type="button"
               onClick={() => setShowSnapshotModal(false)}
             >
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button type="submit" isLoading={createSnapshot.isPending}>
               <Camera className="h-4 w-4" />
-              Create Snapshot
+              {t("sandboxes.createSnapshot")}
             </Button>
           </div>
         </form>

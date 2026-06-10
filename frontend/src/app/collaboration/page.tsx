@@ -14,6 +14,7 @@ import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatRelativeTime, capitalize } from "@/lib/utils";
 import { toast } from "sonner";
+import { useI18n } from "@/lib/i18n";
 import {
   Plus,
   MessageSquare,
@@ -54,17 +55,6 @@ interface Message {
   created_at: string;
 }
 
-const channelTypeOptions = [
-  { value: "group", label: "Group" },
-  { value: "direct", label: "Direct" },
-  { value: "broadcast", label: "Broadcast" },
-];
-
-const visibilityOptions = [
-  { value: "public", label: "Public" },
-  { value: "private", label: "Private" },
-];
-
 const channelTypeVariant: Record<string, "info" | "success" | "warning"> = {
   direct: "info",
   group: "success",
@@ -84,6 +74,7 @@ const ChannelTypeIcon = ({ type }: { type: string }) => {
 
 export default function CollaborationPage() {
   const queryClient = useQueryClient();
+  const { t } = useI18n();
   const { user } = useAuthStore();
   const [search, setSearch] = useState("");
   const [showCreate, setShowCreate] = useState(false);
@@ -95,6 +86,17 @@ export default function CollaborationPage() {
     type: "group",
     visibility: "public",
   });
+
+  const channelTypeOptions = [
+    { value: "group", label: t("collaboration.group") },
+    { value: "direct", label: t("collaboration.direct") },
+    { value: "broadcast", label: t("collaboration.broadcast") },
+  ];
+
+  const visibilityOptions = [
+    { value: "public", label: t("collaboration.public") },
+    { value: "private", label: t("collaboration.private") },
+  ];
 
   // Fetch channels
   const { data: channelsData, isLoading } = useQuery({
@@ -130,7 +132,7 @@ export default function CollaborationPage() {
       api.post("/collaboration/channels", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["channels"] });
-      toast.success("Channel created successfully");
+      toast.success(t("common.createdSuccess"));
       setShowCreate(false);
       setNewChannel({
         name: "",
@@ -140,7 +142,7 @@ export default function CollaborationPage() {
       });
     },
     onError: () => {
-      toast.error("Failed to create channel");
+      toast.error(t("common.operationFailed"));
     },
   });
 
@@ -156,7 +158,7 @@ export default function CollaborationPage() {
       setMessageInput("");
     },
     onError: () => {
-      toast.error("Failed to send message");
+      toast.error(t("common.operationFailed"));
     },
   });
 
@@ -182,7 +184,7 @@ export default function CollaborationPage() {
   const columns = [
     {
       key: "name",
-      header: "Channel",
+      header: t("collaboration.channelName"),
       render: (channel: Channel) => (
         <div className="flex items-center gap-3">
           <div
@@ -206,7 +208,7 @@ export default function CollaborationPage() {
               )}
             </div>
             <p className="text-xs text-zinc-500 max-w-[250px] truncate">
-              {channel.description || "No description"}
+              {channel.description || t("common.noDescription")}
             </p>
           </div>
         </div>
@@ -214,7 +216,7 @@ export default function CollaborationPage() {
     },
     {
       key: "type",
-      header: "Type",
+      header: t("common.type"),
       render: (channel: Channel) => (
         <Badge variant={channelTypeVariant[channel.type] || "default"}>
           {capitalize(channel.type)}
@@ -223,7 +225,7 @@ export default function CollaborationPage() {
     },
     {
       key: "visibility",
-      header: "Visibility",
+      header: t("collaboration.visibility"),
       render: (channel: Channel) => (
         <div className="flex items-center gap-1.5 text-sm text-zinc-500">
           {channel.visibility === "public" ? (
@@ -237,7 +239,7 @@ export default function CollaborationPage() {
     },
     {
       key: "member_count",
-      header: "Members",
+      header: t("groups.members"),
       render: (channel: Channel) => (
         <div className="flex items-center gap-1.5">
           <Users className="h-3.5 w-3.5 text-zinc-400" />
@@ -249,12 +251,12 @@ export default function CollaborationPage() {
     },
     {
       key: "last_message_at",
-      header: "Last Activity",
+      header: t("agents.lastActive"),
       render: (channel: Channel) => (
         <span className="text-sm text-zinc-500">
           {channel.last_message_at
             ? formatRelativeTime(channel.last_message_at)
-            : "No messages"}
+            : t("collaboration.noMessages")}
         </span>
       ),
     },
@@ -284,15 +286,15 @@ export default function CollaborationPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">
-              Collaboration
+              {t("collaboration.title")}
             </h1>
             <p className="text-zinc-500 mt-1">
-              Communication channels and agent collaboration tools
+              {t("collaboration.subtitle")}
             </p>
           </div>
           <Button onClick={() => setShowCreate(true)}>
             <Plus className="h-4 w-4" />
-            Create Channel
+            {t("collaboration.createChannel")}
           </Button>
         </div>
 
@@ -334,7 +336,7 @@ export default function CollaborationPage() {
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
                   <input
                     type="text"
-                    placeholder="Search channels..."
+                    placeholder={t("collaboration.searchPlaceholder")}
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     className="w-full pl-10 pr-4 py-2.5 text-sm rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none"
@@ -373,7 +375,7 @@ export default function CollaborationPage() {
                           {channel.name}
                         </p>
                         <p className="text-xs text-zinc-400 truncate">
-                          {channel.member_count} members
+                          {channel.member_count} {t("groups.memberCount")}
                         </p>
                       </div>
                       {channel.visibility === "private" && (
@@ -383,7 +385,7 @@ export default function CollaborationPage() {
                   ))}
                   {filteredChannels.length === 0 && (
                     <div className="text-center py-8 text-zinc-400">
-                      <p className="text-sm">No channels found</p>
+                      <p className="text-sm">{t("collaboration.noChannels")}</p>
                     </div>
                   )}
                 </div>
@@ -394,7 +396,7 @@ export default function CollaborationPage() {
                   isLoading={isLoading}
                   keyExtractor={(c: Channel) => c.id}
                   onRowClick={(c: Channel) => setSelectedChannel(c.id)}
-                  emptyMessage="No channels found. Create your first channel to start collaborating."
+                  emptyMessage={t("collaboration.noChannels")}
                 />
               )}
             </Card>
@@ -413,7 +415,7 @@ export default function CollaborationPage() {
                         {selectedChannelData.name}
                       </h3>
                       <p className="text-xs text-zinc-400">
-                        {selectedChannelData.member_count} members -{" "}
+                        {selectedChannelData.member_count} {t("groups.memberCount")} -{" "}
                         {capitalize(selectedChannelData.type)} -{" "}
                         {capitalize(selectedChannelData.visibility)}
                       </p>
@@ -432,7 +434,7 @@ export default function CollaborationPage() {
                   {messages.length === 0 && (
                     <div className="flex flex-col items-center justify-center h-full text-zinc-400">
                       <MessageSquare className="h-10 w-10 mb-3 opacity-40" />
-                      <p className="text-sm font-medium">No messages yet</p>
+                      <p className="text-sm font-medium">{t("collaboration.noMessages")}</p>
                       <p className="text-xs mt-1">
                         Start the conversation by sending a message
                       </p>
@@ -533,12 +535,12 @@ export default function CollaborationPage() {
       <Modal
         isOpen={showCreate}
         onClose={() => setShowCreate(false)}
-        title="Create New Channel"
-        description="Set up a communication channel for agents and team members"
+        title={t("collaboration.createChannel")}
+        description={t("collaboration.subtitle")}
       >
         <form onSubmit={handleCreate} className="space-y-4">
           <Input
-            label="Channel Name"
+            label={t("collaboration.channelName")}
             value={newChannel.name}
             onChange={(e) =>
               setNewChannel((p) => ({ ...p, name: e.target.value }))
@@ -548,7 +550,7 @@ export default function CollaborationPage() {
           />
 
           <Input
-            label="Description"
+            label={t("common.description")}
             value={newChannel.description}
             onChange={(e) =>
               setNewChannel((p) => ({ ...p, description: e.target.value }))
@@ -557,7 +559,7 @@ export default function CollaborationPage() {
           />
 
           <Select
-            label="Channel Type"
+            label={t("collaboration.channelType")}
             value={newChannel.type}
             onChange={(e) =>
               setNewChannel((p) => ({ ...p, type: e.target.value }))
@@ -566,7 +568,7 @@ export default function CollaborationPage() {
           />
 
           <Select
-            label="Visibility"
+            label={t("collaboration.visibility")}
             value={newChannel.visibility}
             onChange={(e) =>
               setNewChannel((p) => ({ ...p, visibility: e.target.value }))
@@ -580,10 +582,10 @@ export default function CollaborationPage() {
               type="button"
               onClick={() => setShowCreate(false)}
             >
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button type="submit" isLoading={createChannel.isPending}>
-              Create Channel
+              {t("collaboration.createChannel")}
             </Button>
           </div>
         </form>

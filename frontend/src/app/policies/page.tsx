@@ -14,6 +14,7 @@ import { useAgents } from "@/hooks/use-agents";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { policiesAPI } from "@/lib/api";
 import { formatRelativeTime, getEffectColor } from "@/lib/utils";
+import { useI18n } from "@/lib/i18n";
 import { toast } from "sonner";
 import {
   Plus,
@@ -51,12 +52,8 @@ interface SimulationResult {
   reason: string;
 }
 
-const effectOptions = [
-  { value: "allow", label: "Allow" },
-  { value: "deny", label: "Deny" },
-];
-
 export default function PoliciesPage() {
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [showCreate, setShowCreate] = useState(false);
@@ -84,6 +81,11 @@ export default function PoliciesPage() {
 
   const agentOptions = agents.map((a: any) => ({ value: a.id, label: a.name }));
 
+  const effectOptions = [
+    { value: "allow", label: t("policies.allow") },
+    { value: "deny", label: t("policies.deny") },
+  ];
+
   const filteredPolicies = policies.filter(
     (p) =>
       p.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -94,7 +96,7 @@ export default function PoliciesPage() {
     mutationFn: (data: Record<string, unknown>) => policiesAPI.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["policies"] });
-      toast.success("Policy created successfully");
+      toast.success(t("common.createdSuccess"));
       setShowCreate(false);
       setNewPolicy({
         name: "",
@@ -107,7 +109,7 @@ export default function PoliciesPage() {
       });
     },
     onError: () => {
-      toast.error("Failed to create policy");
+      toast.error(t("common.operationFailed"));
     },
   });
 
@@ -115,10 +117,10 @@ export default function PoliciesPage() {
     mutationFn: (id: string) => policiesAPI.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["policies"] });
-      toast.success("Policy deleted");
+      toast.success(t("common.deletedSuccess"));
     },
     onError: () => {
-      toast.error("Failed to delete policy");
+      toast.error(t("common.operationFailed"));
     },
   });
 
@@ -127,10 +129,10 @@ export default function PoliciesPage() {
       policiesAPI.update(id, { is_active }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["policies"] });
-      toast.success("Policy updated");
+      toast.success(t("common.updatedSuccess"));
     },
     onError: () => {
-      toast.error("Failed to update policy");
+      toast.error(t("common.operationFailed"));
     },
   });
 
@@ -181,7 +183,7 @@ export default function PoliciesPage() {
   const columns = [
     {
       key: "name",
-      header: "Policy",
+      header: t("policies.title"),
       render: (policy: Policy) => (
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-lg bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">
@@ -190,7 +192,7 @@ export default function PoliciesPage() {
           <div>
             <p className="font-medium text-zinc-900 dark:text-white">{policy.name}</p>
             <p className="text-xs text-zinc-500 max-w-[200px] truncate">
-              {policy.description || "No description"}
+              {policy.description || t("common.noDescription")}
             </p>
           </div>
         </div>
@@ -198,18 +200,18 @@ export default function PoliciesPage() {
     },
     {
       key: "effect",
-      header: "Effect",
+      header: t("policies.effect"),
       render: (policy: Policy) => (
         <Badge
           variant={policy.effect === "allow" ? "success" : "danger"}
         >
-          {policy.effect === "allow" ? "Allow" : "Deny"}
+          {policy.effect === "allow" ? t("policies.allow") : t("policies.deny")}
         </Badge>
       ),
     },
     {
       key: "resources",
-      header: "Resources",
+      header: t("policies.resources"),
       render: (policy: Policy) => (
         <div className="flex gap-1 flex-wrap max-w-[200px]">
           {(policy.resources || []).slice(0, 2).map((r) => (
@@ -230,7 +232,7 @@ export default function PoliciesPage() {
     },
     {
       key: "actions",
-      header: "Actions",
+      header: t("policies.actionsLabel"),
       render: (policy: Policy) => (
         <div className="flex gap-1 flex-wrap max-w-[200px]">
           {(policy.actions || []).slice(0, 2).map((a) => (
@@ -251,7 +253,7 @@ export default function PoliciesPage() {
     },
     {
       key: "priority",
-      header: "Priority",
+      header: t("policies.priority"),
       render: (policy: Policy) => (
         <span className="text-sm font-mono text-zinc-600 dark:text-zinc-400">
           {policy.priority}
@@ -260,7 +262,7 @@ export default function PoliciesPage() {
     },
     {
       key: "is_active",
-      header: "Status",
+      header: t("common.status"),
       render: (policy: Policy) => (
         <button
           onClick={(e) => {
@@ -272,12 +274,12 @@ export default function PoliciesPage() {
           {policy.is_active ? (
             <>
               <ToggleRight className="h-5 w-5 text-success-500" />
-              <span className="text-xs text-success-600">Active</span>
+              <span className="text-xs text-success-600">{t("policies.active")}</span>
             </>
           ) : (
             <>
               <ToggleLeft className="h-5 w-5 text-zinc-400" />
-              <span className="text-xs text-zinc-400">Inactive</span>
+              <span className="text-xs text-zinc-400">{t("policies.inactive")}</span>
             </>
           )}
         </button>
@@ -304,7 +306,7 @@ export default function PoliciesPage() {
           <button
             onClick={(e) => {
               e.stopPropagation();
-              if (confirm("Are you sure you want to delete this policy?")) {
+              if (confirm(t("common.confirmDelete"))) {
                 deletePolicy.mutate(policy.id);
               }
             }}
@@ -323,14 +325,14 @@ export default function PoliciesPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">Policies</h1>
+            <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">{t("policies.title")}</h1>
             <p className="text-zinc-500 mt-1">
-              Define and manage access control policies for your agents
+              {t("policies.subtitle")}
             </p>
           </div>
           <Button onClick={() => setShowCreate(true)}>
             <Plus className="h-4 w-4" />
-            Create Policy
+            {t("policies.createPolicy")}
           </Button>
         </div>
 
@@ -342,7 +344,7 @@ export default function PoliciesPage() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
                 <input
                   type="text"
-                  placeholder="Search policies..."
+                  placeholder={t("policies.searchPlaceholder")}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="w-full pl-10 pr-4 py-2.5 text-sm rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none"
@@ -359,7 +361,7 @@ export default function PoliciesPage() {
             onRowClick={(p: Policy) =>
               setExpandedPolicy(expandedPolicy === p.id ? null : p.id)
             }
-            emptyMessage="No policies found. Create your first policy to get started."
+            emptyMessage={t("policies.noPolicies")}
           />
 
           {/* Expanded Policy Detail */}
@@ -373,7 +375,7 @@ export default function PoliciesPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <p className="text-xs font-semibold uppercase text-zinc-400 mb-1">
-                          Resources
+                          {t("policies.resources")}
                         </p>
                         <div className="flex flex-wrap gap-1.5">
                           {(policy.resources || []).map((r) => (
@@ -388,7 +390,7 @@ export default function PoliciesPage() {
                       </div>
                       <div>
                         <p className="text-xs font-semibold uppercase text-zinc-400 mb-1">
-                          Actions
+                          {t("policies.actionsLabel")}
                         </p>
                         <div className="flex flex-wrap gap-1.5">
                           {(policy.actions || []).map((a) => (
@@ -405,7 +407,7 @@ export default function PoliciesPage() {
                     {policy.conditions && (
                       <div>
                         <p className="text-xs font-semibold uppercase text-zinc-400 mb-1">
-                          Conditions
+                          {t("policies.conditions")}
                         </p>
                         <pre className="text-xs bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 p-3 rounded-lg font-mono overflow-x-auto">
                           {JSON.stringify(policy.conditions, null, 2)}
@@ -413,8 +415,8 @@ export default function PoliciesPage() {
                       </div>
                     )}
                     <div className="flex items-center gap-4 text-xs text-zinc-400">
-                      <span>Created {formatRelativeTime(policy.created_at)}</span>
-                      <span>Updated {formatRelativeTime(policy.updated_at)}</span>
+                      <span>{t("common.created")} {formatRelativeTime(policy.created_at)}</span>
+                      <span>{t("common.updated")} {formatRelativeTime(policy.updated_at)}</span>
                     </div>
                   </div>
                 );
@@ -426,31 +428,31 @@ export default function PoliciesPage() {
         {/* Policy Simulator */}
         <Card>
           <CardHeader
-            title="Policy Simulator"
-            description="Test how policies evaluate for a given agent, resource, and action"
+            title={t("policies.simulator")}
+            description={t("policies.simulatorDesc")}
             action={
               <Badge variant="info">
                 <Zap className="h-3 w-3 mr-1" />
-                Simulator
+                {t("policies.simulator")}
               </Badge>
             }
           />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Select
-              label="Agent"
+              label={t("agents.title")}
               value={simAgentId}
               onChange={(e) => setSimAgentId(e.target.value)}
               options={agentOptions}
               placeholder="Select an agent"
             />
             <Input
-              label="Resource"
+              label={t("audit.resource")}
               value={simResource}
               onChange={(e) => setSimResource(e.target.value)}
               placeholder="e.g., api:users:*"
             />
             <Input
-              label="Action"
+              label={t("audit.action")}
               value={simAction}
               onChange={(e) => setSimAction(e.target.value)}
               placeholder="e.g., read"
@@ -463,7 +465,7 @@ export default function PoliciesPage() {
               variant="outline"
             >
               <Play className="h-4 w-4" />
-              Simulate
+              {t("policies.simulate")}
             </Button>
           </div>
 
@@ -473,12 +475,12 @@ export default function PoliciesPage() {
                 {simResult.allowed ? (
                   <div className="flex items-center gap-2 text-success-600">
                     <CheckCircle className="h-6 w-6" />
-                    <span className="text-lg font-semibold">Allowed</span>
+                    <span className="text-lg font-semibold">{t("policies.allowed")}</span>
                   </div>
                 ) : (
                   <div className="flex items-center gap-2 text-danger-600">
                     <XCircle className="h-6 w-6" />
-                    <span className="text-lg font-semibold">Denied</span>
+                    <span className="text-lg font-semibold">{t("policies.denied")}</span>
                   </div>
                 )}
               </div>
@@ -488,7 +490,7 @@ export default function PoliciesPage() {
               {simResult.matching_policies && simResult.matching_policies.length > 0 && (
                 <div>
                   <p className="text-xs font-semibold uppercase text-zinc-400 mb-2">
-                    Matching Policies
+                    {t("policies.matchingPolicies")}
                   </p>
                   <div className="space-y-2">
                     {simResult.matching_policies.map((mp) => (
@@ -506,10 +508,10 @@ export default function PoliciesPage() {
                           <Badge
                             variant={mp.effect === "allow" ? "success" : "danger"}
                           >
-                            {mp.effect}
+                            {mp.effect === "allow" ? t("policies.allow") : t("policies.deny")}
                           </Badge>
                           <span className="text-xs text-zinc-400 font-mono">
-                            Priority: {mp.priority}
+                            {t("policies.priority")}: {mp.priority}
                           </span>
                         </div>
                       </div>
@@ -526,13 +528,13 @@ export default function PoliciesPage() {
       <Modal
         isOpen={showCreate}
         onClose={() => setShowCreate(false)}
-        title="Create New Policy"
-        description="Define access control rules for your agents"
+        title={t("policies.createPolicy")}
+        description={t("policies.subtitle")}
         size="lg"
       >
         <form onSubmit={handleCreate} className="space-y-4">
           <Input
-            label="Policy Name"
+            label={t("policies.policyName")}
             value={newPolicy.name}
             onChange={(e) => setNewPolicy((p) => ({ ...p, name: e.target.value }))}
             placeholder="e.g., Allow Read Access"
@@ -540,7 +542,7 @@ export default function PoliciesPage() {
           />
 
           <Input
-            label="Description"
+            label={t("common.description")}
             value={newPolicy.description}
             onChange={(e) =>
               setNewPolicy((p) => ({ ...p, description: e.target.value }))
@@ -549,32 +551,32 @@ export default function PoliciesPage() {
           />
 
           <Select
-            label="Effect"
+            label={t("policies.effect")}
             value={newPolicy.effect}
             onChange={(e) => setNewPolicy((p) => ({ ...p, effect: e.target.value }))}
             options={effectOptions}
           />
 
           <Input
-            label="Resources"
+            label={t("policies.resources")}
             value={newPolicy.resources}
             onChange={(e) =>
               setNewPolicy((p) => ({ ...p, resources: e.target.value }))
             }
-            placeholder="api:users:*, api:orders:read (comma-separated)"
-            hint="Comma-separated list of resource patterns"
+            placeholder={t("policies.resourcesPlaceholder")}
+            hint={t("policies.resourcesHint")}
           />
 
           <Input
-            label="Actions"
+            label={t("policies.actionsLabel")}
             value={newPolicy.actions}
             onChange={(e) => setNewPolicy((p) => ({ ...p, actions: e.target.value }))}
-            placeholder="read, write, delete (comma-separated)"
-            hint="Comma-separated list of allowed/denied actions"
+            placeholder={t("policies.actionsPlaceholder")}
+            hint={t("policies.actionsHint")}
           />
 
           <Input
-            label="Priority"
+            label={t("policies.priority")}
             type="number"
             value={newPolicy.priority}
             onChange={(e) =>
@@ -582,12 +584,12 @@ export default function PoliciesPage() {
             }
             min={0}
             max={1000}
-            hint="Higher priority policies are evaluated first"
+            hint={t("policies.priorityHint")}
           />
 
           <div className="space-y-1.5">
             <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-              Conditions (JSON)
+              {t("policies.conditions")}
             </label>
             <textarea
               value={newPolicy.conditions}
@@ -599,7 +601,7 @@ export default function PoliciesPage() {
               className="block w-full rounded-lg border border-zinc-300 px-3.5 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 transition-colors focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder:text-zinc-500 font-mono"
             />
             <p className="text-sm text-zinc-500">
-              Optional JSON object defining additional conditions
+              {t("policies.conditionsHint")}
             </p>
           </div>
 
@@ -609,10 +611,10 @@ export default function PoliciesPage() {
               type="button"
               onClick={() => setShowCreate(false)}
             >
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button type="submit" isLoading={createPolicy.isPending}>
-              Create Policy
+              {t("policies.createPolicy")}
             </Button>
           </div>
         </form>

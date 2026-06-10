@@ -28,6 +28,7 @@ import {
   getStatusColor,
   copyToClipboard,
 } from "@/lib/utils";
+import { useI18n } from "@/lib/i18n";
 import {
   ArrowLeft,
   Bot,
@@ -85,15 +86,16 @@ const credentialTypeOptions = [
 ];
 
 const tabs: { key: TabKey; label: string; icon: React.ElementType }[] = [
-  { key: "overview", label: "Overview", icon: Bot },
-  { key: "credentials", label: "Credentials", icon: Key },
-  { key: "activity", label: "Activity", icon: Activity },
-  { key: "metrics", label: "Metrics", icon: BarChart3 },
+  { key: "overview", label: "agents.overview", icon: Bot },
+  { key: "credentials", label: "agents.credentials", icon: Key },
+  { key: "activity", label: "agents.activity", icon: Activity },
+  { key: "metrics", label: "agents.metrics", icon: BarChart3 },
 ];
 
 export default function AgentDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const { t } = useI18n();
   const agentId = params?.id as string;
 
   const [activeTab, setActiveTab] = useState<TabKey>("overview");
@@ -186,7 +188,7 @@ export default function AgentDetailPage() {
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center space-y-4">
             <Loader2 className="h-8 w-8 animate-spin text-primary-500 mx-auto" />
-            <p className="text-zinc-500 dark:text-zinc-400">Loading agent details...</p>
+            <p className="text-zinc-500 dark:text-zinc-400">{t("common.loading")}</p>
           </div>
         </div>
       </AppLayout>
@@ -208,7 +210,7 @@ export default function AgentDetailPage() {
             </p>
             <Button variant="secondary" onClick={() => router.push("/agents")}>
               <ArrowLeft className="h-4 w-4" />
-              Back to Agents
+              {t("common.back")}
             </Button>
           </div>
         </div>
@@ -226,7 +228,7 @@ export default function AgentDetailPage() {
             className="inline-flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to Agents
+            {t("common.back")}
           </button>
 
           <div className="flex items-start justify-between">
@@ -239,9 +241,9 @@ export default function AgentDetailPage() {
                   <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">
                     {agent.name}
                   </h1>
-                  <Badge variant="info">{capitalize(agent.agent_type)}</Badge>
+                  <Badge variant="info">{t(`agents.${agent.agent_type}`)}</Badge>
                   <Badge variant={statusVariant[agent.status] || "default"}>
-                    {capitalize(agent.status)}
+                    {t(`agents.${agent.status === "pending_approval" ? "pendingApproval" : agent.status}`)}
                   </Badge>
                 </div>
                 {agent.description && (
@@ -259,7 +261,7 @@ export default function AgentDetailPage() {
                   isLoading={suspendAgent.isPending}
                 >
                   <Pause className="h-4 w-4" />
-                  Suspend
+                  {t("agents.suspend")}
                 </Button>
               )}
               {agent.status === "suspended" && (
@@ -270,7 +272,7 @@ export default function AgentDetailPage() {
                   isLoading={activateAgent.isPending}
                 >
                   <Play className="h-4 w-4" />
-                  Activate
+                  {t("agents.activate")}
                 </Button>
               )}
               {agent.status !== "revoked" && (
@@ -280,7 +282,7 @@ export default function AgentDetailPage() {
                   onClick={() => setShowRevokeConfirm(true)}
                 >
                   <Ban className="h-4 w-4" />
-                  Revoke
+                  {t("agents.revoke")}
                 </Button>
               )}
               <Button
@@ -289,7 +291,7 @@ export default function AgentDetailPage() {
                 onClick={() => setShowDeleteConfirm(true)}
               >
                 <Trash2 className="h-4 w-4" />
-                Delete
+                {t("common.delete")}
               </Button>
             </div>
           </div>
@@ -315,7 +317,7 @@ export default function AgentDetailPage() {
                   `}
                 >
                   <Icon className="h-4 w-4" />
-                  {tab.label}
+                  {t(tab.label)}
                 </button>
               );
             })}
@@ -347,7 +349,7 @@ export default function AgentDetailPage() {
       <Modal
         isOpen={showCreateCred}
         onClose={handleCloseCreateCred}
-        title={createdKey ? "Credential Created" : "Create New Credential"}
+        title={createdKey ? "Credential Created" : t("credentials.create")}
         description={
           createdKey
             ? "Copy the key below. It will not be shown again."
@@ -362,7 +364,7 @@ export default function AgentDetailPage() {
                 <div className="text-sm text-warning-800 dark:text-warning-300">
                   <p className="font-medium">Save this key now</p>
                   <p className="mt-1">
-                    This is the only time the full key will be displayed. Store it securely.
+                    {t("credentials.keyWarning")}
                   </p>
                 </div>
               </div>
@@ -385,27 +387,27 @@ export default function AgentDetailPage() {
               </Button>
             </div>
             <div className="flex justify-end pt-4 border-t border-zinc-200 dark:border-zinc-700">
-              <Button onClick={handleCloseCreateCred}>Done</Button>
+              <Button onClick={handleCloseCreateCred}>{t("common.done")}</Button>
             </div>
           </div>
         ) : (
           <form onSubmit={handleCreateCredential} className="space-y-4">
             <Input
-              label="Credential Name"
+              label={t("credentials.credentialName")}
               placeholder="e.g., Production API Key"
               value={newCredName}
               onChange={(e) => setNewCredName(e.target.value)}
               required
             />
             <Select
-              label="Credential Type"
+              label={t("credentials.credentialType")}
               value={newCredType}
               onChange={(e) => setNewCredType(e.target.value)}
               options={credentialTypeOptions}
             />
             <div className="flex justify-end gap-3 pt-4 border-t border-zinc-200 dark:border-zinc-700">
               <Button variant="secondary" type="button" onClick={handleCloseCreateCred}>
-                Cancel
+                {t("common.cancel")}
               </Button>
               <Button type="submit" isLoading={createCredential.isPending}>
                 <Key className="h-4 w-4" />
@@ -420,7 +422,7 @@ export default function AgentDetailPage() {
       <Modal
         isOpen={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}
-        title="Delete Agent"
+        title={t("common.delete")}
         description="This action cannot be undone."
         size="sm"
       >
@@ -438,11 +440,11 @@ export default function AgentDetailPage() {
           </div>
           <div className="flex justify-end gap-3 pt-2">
             <Button variant="secondary" onClick={() => setShowDeleteConfirm(false)}>
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button variant="danger" onClick={handleDelete} isLoading={deleteAgent.isPending}>
               <Trash2 className="h-4 w-4" />
-              Delete Agent
+              {t("common.delete")}
             </Button>
           </div>
         </div>
@@ -452,7 +454,7 @@ export default function AgentDetailPage() {
       <Modal
         isOpen={showRevokeConfirm}
         onClose={() => setShowRevokeConfirm(false)}
-        title="Revoke Agent"
+        title={t("agents.revoke")}
         description="Revoke all access for this agent."
         size="sm"
       >
@@ -470,11 +472,11 @@ export default function AgentDetailPage() {
           </div>
           <div className="flex justify-end gap-3 pt-2">
             <Button variant="secondary" onClick={() => setShowRevokeConfirm(false)}>
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button variant="danger" onClick={handleRevoke} isLoading={revokeAgent.isPending}>
               <Ban className="h-4 w-4" />
-              Revoke Agent
+              {t("agents.revoke")}
             </Button>
           </div>
         </div>
@@ -488,6 +490,7 @@ export default function AgentDetailPage() {
  * ───────────────────────────────────────────── */
 
 function OverviewTab({ agent }: { agent: any }) {
+  const { t } = useI18n();
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       {/* Agent Details - 2 columns */}
@@ -495,36 +498,36 @@ function OverviewTab({ agent }: { agent: any }) {
         <Card>
           <CardHeader title="Agent Details" />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-5 gap-x-8">
-            <DetailRow icon={Bot} label="Name" value={agent.name} />
-            <DetailRow icon={Tag} label="Type" value={capitalize(agent.agent_type)} />
+            <DetailRow icon={Bot} label={t("common.name")} value={agent.name} />
+            <DetailRow icon={Tag} label={t("common.type")} value={t(`agents.${agent.agent_type}`)} />
             <DetailRow
               icon={CheckCircle}
-              label="Status"
+              label={t("common.status")}
               value={
                 <Badge variant={statusVariant[agent.status] || "default"}>
-                  {capitalize(agent.status)}
+                  {t(`agents.${agent.status === "pending_approval" ? "pendingApproval" : agent.status}`)}
                 </Badge>
               }
             />
             <DetailRow icon={User} label="Owner" value={agent.owner_name || agent.owner_id || "—"} />
             <DetailRow
               icon={Clock}
-              label="Created"
+              label={t("common.created")}
               value={formatDate(agent.created_at)}
             />
             <DetailRow
               icon={Clock}
-              label="Last Active"
-              value={agent.last_active_at ? formatRelativeTime(agent.last_active_at) : "Never"}
+              label={t("agents.lastActive")}
+              value={agent.last_active_at ? formatRelativeTime(agent.last_active_at) : t("agents.never")}
             />
             <DetailRow
               icon={Zap}
-              label="Rate Limit (per min)"
+              label={t("agents.rateLimit")}
               value={agent.max_requests_per_minute?.toLocaleString() ?? "—"}
             />
             <DetailRow
               icon={Zap}
-              label="Daily Limit"
+              label={t("agents.dailyLimit")}
               value={agent.max_requests_per_day?.toLocaleString() ?? "—"}
             />
             {agent.sandbox_id && (
@@ -535,7 +538,7 @@ function OverviewTab({ agent }: { agent: any }) {
           {/* Tags */}
           {agent.tags && agent.tags.length > 0 && (
             <div className="mt-5 pt-5 border-t border-zinc-100 dark:border-zinc-800">
-              <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-2">Tags</p>
+              <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-2">{t("common.tags")}</p>
               <div className="flex flex-wrap gap-2">
                 {agent.tags.map((tag: string) => (
                   <span
@@ -567,7 +570,7 @@ function OverviewTab({ agent }: { agent: any }) {
       {/* Sidebar - Groups */}
       <div className="space-y-6">
         <Card>
-          <CardHeader title="Groups" description="Groups this agent belongs to" />
+          <CardHeader title={t("groups.title")} description="Groups this agent belongs to" />
           {agent.groups && agent.groups.length > 0 ? (
             <div className="space-y-2">
               {agent.groups.map((group: any) => (
@@ -610,11 +613,11 @@ function OverviewTab({ agent }: { agent: any }) {
               value={agent.policy_count ?? "—"}
             />
             <QuickStatRow
-              label="Created"
+              label={t("common.created")}
               value={formatRelativeTime(agent.created_at)}
             />
             <QuickStatRow
-              label="Updated"
+              label={t("common.updated")}
               value={agent.updated_at ? formatRelativeTime(agent.updated_at) : "—"}
             />
           </div>
@@ -676,6 +679,7 @@ function CredentialsTab({
   copiedCredId: string | null;
   onCopyPrefix: (prefix: string, credId: string) => void;
 }) {
+  const { t } = useI18n();
   if (isLoading) {
     return (
       <Card>
@@ -691,15 +695,15 @@ function CredentialsTab({
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-lg font-semibold text-zinc-900 dark:text-white">
-            Credentials
+            {t("credentials.title")}
           </h3>
           <p className="text-sm text-zinc-500 dark:text-zinc-400">
-            Manage API keys and tokens for this agent
+            {t("credentials.subtitle")}
           </p>
         </div>
         <Button size="sm" onClick={onCreateClick}>
           <Plus className="h-4 w-4" />
-          New Credential
+          {t("credentials.create")}
         </Button>
       </div>
 
@@ -708,14 +712,14 @@ function CredentialsTab({
           <div className="text-center py-12">
             <Key className="h-10 w-10 text-zinc-300 dark:text-zinc-600 mx-auto mb-3" />
             <h3 className="text-sm font-medium text-zinc-900 dark:text-zinc-100 mb-1">
-              No credentials yet
+              {t("credentials.noCredentials")}
             </h3>
             <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-4">
-              Create a credential to allow this agent to authenticate with the API.
+              {t("credentials.noCredentialsDesc")}
             </p>
             <Button size="sm" onClick={onCreateClick}>
               <Plus className="h-4 w-4" />
-              Create Credential
+              {t("credentials.create")}
             </Button>
           </div>
         </Card>
@@ -736,7 +740,7 @@ function CredentialsTab({
                       <Badge
                         variant={cred.status === "active" ? "success" : "danger"}
                       >
-                        {capitalize(cred.status || "active")}
+                        {t(`agents.${cred.status || "active"}`)}
                       </Badge>
                     </div>
                     <div className="flex items-center gap-3 mt-1">
@@ -747,7 +751,7 @@ function CredentialsTab({
                         <button
                           onClick={() => onCopyPrefix(cred.key_prefix, cred.id)}
                           className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
-                          title="Copy key prefix"
+                          title={t("credentials.copyKey")}
                         >
                           {copiedCredId === cred.id ? (
                             <Check className="h-3.5 w-3.5 text-success-500" />
@@ -760,16 +764,16 @@ function CredentialsTab({
                         {capitalize(cred.credential_type || "api_key")}
                       </span>
                       <span className="text-xs text-zinc-400">
-                        Created {formatRelativeTime(cred.created_at)}
+                        {t("credentials.created")} {formatRelativeTime(cred.created_at)}
                       </span>
                       {cred.expires_at && (
                         <span className="text-xs text-zinc-400">
-                          Expires {formatDate(cred.expires_at)}
+                          {t("credentials.expires")} {formatDate(cred.expires_at)}
                         </span>
                       )}
                       {cred.last_used_at && (
                         <span className="text-xs text-zinc-400">
-                          Last used {formatRelativeTime(cred.last_used_at)}
+                          {t("credentials.lastUsed")} {formatRelativeTime(cred.last_used_at)}
                         </span>
                       )}
                     </div>
@@ -783,10 +787,10 @@ function CredentialsTab({
                         size="sm"
                         onClick={() => onRevoke(cred.id)}
                         disabled={revokeLoading}
-                        title="Revoke credential"
+                        title={t("credentials.revoke")}
                       >
                         <Ban className="h-4 w-4" />
-                        Revoke
+                        {t("credentials.revoke")}
                       </Button>
                     </>
                   )}
@@ -811,6 +815,7 @@ function ActivityTab({
   activities: any[];
   isLoading: boolean;
 }) {
+  const { t } = useI18n();
   if (isLoading) {
     return (
       <Card>
@@ -825,7 +830,7 @@ function ActivityTab({
     <div className="space-y-4">
       <div>
         <h3 className="text-lg font-semibold text-zinc-900 dark:text-white">
-          Activity Log
+          {t("agents.activity")}
         </h3>
         <p className="text-sm text-zinc-500 dark:text-zinc-400">
           Recent audit log entries for this agent
@@ -837,7 +842,7 @@ function ActivityTab({
           <div className="text-center py-12">
             <Activity className="h-10 w-10 text-zinc-300 dark:text-zinc-600 mx-auto mb-3" />
             <h3 className="text-sm font-medium text-zinc-900 dark:text-zinc-100 mb-1">
-              No activity yet
+              {t("dashboard.noActivity")}
             </h3>
             <p className="text-sm text-zinc-500 dark:text-zinc-400">
               Activity will appear here once this agent starts making requests.
@@ -911,6 +916,7 @@ function ActivityTab({
  * ───────────────────────────────────────────── */
 
 function MetricsTab({ metrics, isLoading }: { metrics: any; isLoading: boolean }) {
+  const { t } = useI18n();
   if (isLoading) {
     return (
       <Card>
@@ -939,7 +945,7 @@ function MetricsTab({ metrics, isLoading }: { metrics: any; isLoading: boolean }
 
   const statCards = [
     {
-      label: "Requests Today",
+      label: t("dashboard.totalRequests"),
       value: metrics.requests_today?.toLocaleString() ?? "0",
       icon: Activity,
       color: "text-primary-500",
@@ -953,7 +959,7 @@ function MetricsTab({ metrics, isLoading }: { metrics: any; isLoading: boolean }
       bg: "bg-success-50 dark:bg-green-950",
     },
     {
-      label: "Error Rate",
+      label: t("dashboard.errorRate"),
       value: `${(metrics.error_rate ?? 0).toFixed(1)}%`,
       icon: AlertTriangle,
       color: metrics.error_rate > 5 ? "text-danger-500" : "text-success-500",
@@ -1033,7 +1039,7 @@ function MetricsTab({ metrics, isLoading }: { metrics: any; isLoading: boolean }
                     stroke="#6366f1"
                     fill="url(#requestGradient)"
                     strokeWidth={2}
-                    name="Requests"
+                    name={t("common.requests")}
                   />
                   <Area
                     type="monotone"
@@ -1042,13 +1048,13 @@ function MetricsTab({ metrics, isLoading }: { metrics: any; isLoading: boolean }
                     fill="#f43f5e"
                     fillOpacity={0.08}
                     strokeWidth={2}
-                    name="Errors"
+                    name={t("common.errors")}
                   />
                 </AreaChart>
               </ResponsiveContainer>
             ) : (
               <div className="flex items-center justify-center h-full text-zinc-400">
-                No hourly data available
+                {t("common.noData")}
               </div>
             )}
           </div>
@@ -1083,19 +1089,19 @@ function MetricsTab({ metrics, isLoading }: { metrics: any; isLoading: boolean }
                     dataKey="requests"
                     fill="#6366f1"
                     radius={[4, 4, 0, 0]}
-                    name="Requests"
+                    name={t("common.requests")}
                   />
                   <Bar
                     dataKey="errors"
                     fill="#f43f5e"
                     radius={[4, 4, 0, 0]}
-                    name="Errors"
+                    name={t("common.errors")}
                   />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
               <div className="flex items-center justify-center h-full text-zinc-400">
-                No daily data available
+                {t("common.noData")}
               </div>
             )}
           </div>

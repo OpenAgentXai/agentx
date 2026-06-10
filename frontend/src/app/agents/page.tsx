@@ -11,15 +11,9 @@ import { Table } from "@/components/ui/table";
 import { Modal } from "@/components/ui/modal";
 import { Select } from "@/components/ui/select";
 import { useAgents, useCreateAgent } from "@/hooks/use-agents";
-import { formatRelativeTime, capitalize } from "@/lib/utils";
+import { formatRelativeTime } from "@/lib/utils";
+import { useI18n } from "@/lib/i18n";
 import { Plus, Search, Bot, Filter } from "lucide-react";
-
-const agentTypeOptions = [
-  { value: "autonomous", label: "Autonomous" },
-  { value: "supervised", label: "Supervised" },
-  { value: "collaborative", label: "Collaborative" },
-  { value: "restricted", label: "Restricted" },
-];
 
 const statusVariant: Record<string, "success" | "warning" | "danger" | "default" | "info"> = {
   active: "success",
@@ -31,6 +25,14 @@ const statusVariant: Record<string, "success" | "warning" | "danger" | "default"
 
 export default function AgentsPage() {
   const router = useRouter();
+  const { t } = useI18n();
+
+  const agentTypeOptions = [
+    { value: "autonomous", label: t("agents.autonomous") },
+    { value: "supervised", label: t("agents.supervised") },
+    { value: "collaborative", label: t("agents.collaborative") },
+    { value: "restricted", label: t("agents.restricted") },
+  ];
   const [search, setSearch] = useState("");
   const [showCreate, setShowCreate] = useState(false);
   const [newAgent, setNewAgent] = useState({
@@ -79,30 +81,30 @@ export default function AgentsPage() {
           </div>
           <div>
             <p className="font-medium text-zinc-900 dark:text-white">{agent.name}</p>
-            <p className="text-xs text-zinc-500">{agent.description || "No description"}</p>
+            <p className="text-xs text-zinc-500">{agent.description || t("common.noDescription")}</p>
           </div>
         </div>
       ),
     },
     {
       key: "agent_type",
-      header: "Type",
+      header: t("common.type"),
       render: (agent: any) => (
-        <Badge variant="info">{capitalize(agent.agent_type)}</Badge>
+        <Badge variant="info">{t(`agents.${agent.agent_type}`)}</Badge>
       ),
     },
     {
       key: "status",
-      header: "Status",
+      header: t("common.status"),
       render: (agent: any) => (
         <Badge variant={statusVariant[agent.status] || "default"}>
-          {capitalize(agent.status)}
+          {t(`agents.${agent.status === "pending_approval" ? "pendingApproval" : agent.status}`)}
         </Badge>
       ),
     },
     {
       key: "tags",
-      header: "Tags",
+      header: t("common.tags"),
       render: (agent: any) => (
         <div className="flex gap-1 flex-wrap">
           {(agent.tags || []).slice(0, 3).map((tag: string) => (
@@ -115,16 +117,16 @@ export default function AgentsPage() {
     },
     {
       key: "last_active_at",
-      header: "Last Active",
+      header: t("agents.lastActive"),
       render: (agent: any) => (
         <span className="text-zinc-500">
-          {agent.last_active_at ? formatRelativeTime(agent.last_active_at) : "Never"}
+          {agent.last_active_at ? formatRelativeTime(agent.last_active_at) : t("agents.never")}
         </span>
       ),
     },
     {
       key: "created_at",
-      header: "Created",
+      header: t("common.created"),
       render: (agent: any) => (
         <span className="text-zinc-500">{formatRelativeTime(agent.created_at)}</span>
       ),
@@ -136,12 +138,12 @@ export default function AgentsPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">Agents</h1>
-            <p className="text-zinc-500 mt-1">Manage your AI agent identities</p>
+            <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">{t("agents.title")}</h1>
+            <p className="text-zinc-500 mt-1">{t("agents.subtitle")}</p>
           </div>
           <Button onClick={() => setShowCreate(true)}>
             <Plus className="h-4 w-4" />
-            Create Agent
+            {t("agents.createAgent")}
           </Button>
         </div>
 
@@ -153,7 +155,7 @@ export default function AgentsPage() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
                 <input
                   type="text"
-                  placeholder="Search agents..."
+                  placeholder={t("agents.searchPlaceholder")}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="w-full pl-10 pr-4 py-2.5 text-sm rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none"
@@ -161,7 +163,7 @@ export default function AgentsPage() {
               </div>
               <Button variant="outline" size="sm">
                 <Filter className="h-4 w-4" />
-                Filters
+                {t("common.filters")}
               </Button>
             </div>
           </div>
@@ -172,7 +174,7 @@ export default function AgentsPage() {
             isLoading={isLoading}
             keyExtractor={(agent: any) => agent.id}
             onRowClick={(agent: any) => router.push(`/agents/${agent.id}`)}
-            emptyMessage="No agents found. Create your first agent to get started."
+            emptyMessage={t("agents.noAgents")}
           />
         </Card>
       </div>
@@ -181,43 +183,43 @@ export default function AgentsPage() {
       <Modal
         isOpen={showCreate}
         onClose={() => setShowCreate(false)}
-        title="Create New Agent"
+        title={t("agents.createAgent")}
         description="Define a new AI agent identity with its type and configuration."
       >
         <form onSubmit={handleCreate} className="space-y-4">
           <Input
-            label="Agent Name"
+            label={t("agents.agentName")}
             value={newAgent.name}
             onChange={(e) => setNewAgent((p) => ({ ...p, name: e.target.value }))}
-            placeholder="e.g., Data Analyzer Bot"
+            placeholder={t("agents.agentNamePlaceholder")}
             required
           />
 
           <Input
-            label="Description"
+            label={t("common.description")}
             value={newAgent.description}
             onChange={(e) => setNewAgent((p) => ({ ...p, description: e.target.value }))}
-            placeholder="What does this agent do?"
+            placeholder={t("agents.descriptionPlaceholder")}
           />
 
           <Select
-            label="Agent Type"
+            label={t("agents.agentType")}
             value={newAgent.agent_type}
             onChange={(e) => setNewAgent((p) => ({ ...p, agent_type: e.target.value }))}
             options={agentTypeOptions}
           />
 
           <Input
-            label="Tags"
+            label={t("common.tags")}
             value={newAgent.tags}
             onChange={(e) => setNewAgent((p) => ({ ...p, tags: e.target.value }))}
-            placeholder="ml, data, production (comma-separated)"
-            hint="Comma-separated tags for organization"
+            placeholder={t("agents.tagsPlaceholder")}
+            hint={t("agents.tagsHint")}
           />
 
           <div className="grid grid-cols-2 gap-4">
             <Input
-              label="Rate Limit (per min)"
+              label={t("agents.rateLimit")}
               type="number"
               value={newAgent.max_requests_per_minute}
               onChange={(e) => setNewAgent((p) => ({ ...p, max_requests_per_minute: parseInt(e.target.value) }))}
@@ -225,7 +227,7 @@ export default function AgentsPage() {
               max={10000}
             />
             <Input
-              label="Daily Limit"
+              label={t("agents.dailyLimit")}
               type="number"
               value={newAgent.max_requests_per_day}
               onChange={(e) => setNewAgent((p) => ({ ...p, max_requests_per_day: parseInt(e.target.value) }))}
@@ -236,10 +238,10 @@ export default function AgentsPage() {
 
           <div className="flex justify-end gap-3 pt-4 border-t border-zinc-200 dark:border-zinc-700">
             <Button variant="secondary" type="button" onClick={() => setShowCreate(false)}>
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button type="submit" isLoading={createAgent.isPending}>
-              Create Agent
+              {t("agents.createAgent")}
             </Button>
           </div>
         </form>

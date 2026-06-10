@@ -31,6 +31,12 @@ Enterprises are deploying autonomous AI agents faster than they can govern them.
 <p><sub>The audit feed above shows a real agent being <b>denied</b> by the default-deny ABAC engine.</sub></p>
 </div>
 
+**Desktop apps** (~3 MB, Tauri):
+[⬇️ macOS (.dmg, universal)](https://github.com/OpenAgentXai/agentx/releases/download/desktop-v0.1.0/AgentX_0.1.0_universal.dmg) ·
+[⬇️ Windows (.msi)](https://github.com/OpenAgentXai/agentx/releases/download/desktop-v0.1.0/AgentX_0.1.0_x64_en-US.msi) ·
+[⬇️ Windows (.exe)](https://github.com/OpenAgentXai/agentx/releases/download/desktop-v0.1.0/AgentX_0.1.0_x64-setup.exe) ·
+[all releases](https://github.com/OpenAgentXai/agentx/releases)
+
 <details>
 <summary><b>More screenshots</b> — agents, policies, login</summary>
 <p align="center">

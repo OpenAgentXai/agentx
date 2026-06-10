@@ -105,7 +105,7 @@ export function Sidebar() {
             className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors text-sm"
           >
             {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-            {!collapsed && <span>Collapse</span>}
+            {!collapsed && <span>{t("common.close")}</span>}
           </button>
           <button
             onClick={() => logout()}

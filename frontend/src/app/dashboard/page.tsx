@@ -54,14 +54,14 @@ export default function DashboardPage() {
       bg: "bg-success-50 dark:bg-green-950",
     },
     {
-      name: "Active Policies",
+      name: t("dashboard.activePolicies"),
       value: overviewData?.policies?.total || 0,
       icon: Shield,
       color: "text-warning-500",
       bg: "bg-warning-50 dark:bg-yellow-950",
     },
     {
-      name: "Active Alerts",
+      name: t("dashboard.activeAlerts"),
       value: overviewData?.alerts?.active || 0,
       icon: AlertTriangle,
       color: overviewData?.alerts?.active > 0 ? "text-danger-500" : "text-success-500",
@@ -89,7 +89,7 @@ export default function DashboardPage() {
                     {overviewLoading ? "—" : stat.value.toLocaleString()}
                   </p>
                   {stat.total !== undefined && stat.total > 0 && (
-                    <p className="text-xs text-zinc-400 mt-1">of {stat.total} total</p>
+                    <p className="text-xs text-zinc-400 mt-1">{t("dashboard.ofTotal", { total: stat.total })}</p>
                   )}
                   {stat.subtitle && (
                     <p className="text-xs text-zinc-400 mt-1">{stat.subtitle}</p>

@@ -117,6 +117,7 @@ const translations = {
       registerSubtitle: "Start managing your AI agents securely",
     },
     dashboard: {
+      ofTotal: "of {total} total",
       activePolicies: "Active Policies",
       activeAlerts: "Active Alerts",
       title: "Dashboard",
@@ -402,6 +403,7 @@ const translations = {
       registerSubtitle: "Commencez à gérer vos agents IA en toute sécurité",
     },
     dashboard: {
+      ofTotal: "sur {total} au total",
       activePolicies: "Politiques actives",
       activeAlerts: "Alertes actives",
       title: "Tableau de bord",
@@ -687,6 +689,7 @@ const translations = {
       registerSubtitle: "Comienza a gestionar tus agentes de IA de forma segura",
     },
     dashboard: {
+      ofTotal: "de {total} en total",
       activePolicies: "Políticas activas",
       activeAlerts: "Alertas activas",
       title: "Panel",
@@ -972,6 +975,7 @@ const translations = {
       registerSubtitle: "Beginnen Sie mit der sicheren Verwaltung Ihrer KI-Agenten",
     },
     dashboard: {
+      ofTotal: "von {total} gesamt",
       activePolicies: "Aktive Richtlinien",
       activeAlerts: "Aktive Warnungen",
       title: "Dashboard",
@@ -1257,6 +1261,7 @@ const translations = {
       registerSubtitle: "ابدأ بإدارة وكلاء الذكاء الاصطناعي بأمان",
     },
     dashboard: {
+      ofTotal: "من أصل {total}",
       activePolicies: "السياسات النشطة",
       activeAlerts: "التنبيهات النشطة",
       title: "لوحة التحكم",
@@ -1542,6 +1547,7 @@ const translations = {
       registerSubtitle: "开始安全地管理您的AI代理",
     },
     dashboard: {
+      ofTotal: "共 {total} 个",
       activePolicies: "活跃策略",
       activeAlerts: "活跃警报",
       title: "仪表盘",
@@ -1827,6 +1833,7 @@ const translations = {
       registerSubtitle: "AIエージェントの安全な管理を始めましょう",
     },
     dashboard: {
+      ofTotal: "全 {total} 件中",
       activePolicies: "有効なポリシー",
       activeAlerts: "有効なアラート",
       title: "ダッシュボード",
@@ -2112,6 +2119,7 @@ const translations = {
       registerSubtitle: "Comece a gerenciar seus agentes de IA com segurança",
     },
     dashboard: {
+      ofTotal: "de {total} no total",
       activePolicies: "Políticas ativas",
       activeAlerts: "Alertas ativos",
       title: "Painel",

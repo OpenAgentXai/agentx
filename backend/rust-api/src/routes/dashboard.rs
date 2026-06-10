@@ -192,14 +192,34 @@ pub async fn metrics(
     })))
 }
 
+#[derive(serde::Deserialize)]
+pub struct LiveFeedQuery {
+    token: String,
+}
+
 pub async fn live_feed(
     ws: WebSocketUpgrade,
     State(state): State<Arc<AppState>>,
-) -> impl IntoResponse {
-    ws.on_upgrade(move |socket| handle_live_feed(socket, state))
+    axum::extract::Query(q): axum::extract::Query<LiveFeedQuery>,
+) -> Result<impl IntoResponse, AppError> {
+    // Browsers cannot set Authorization headers on WS upgrade — auth via query param
+    let claims = jsonwebtoken::decode::<Claims>(
+        &q.token,
+        &jsonwebtoken::DecodingKey::from_secret(state.jwt_secret.as_bytes()),
+        &jsonwebtoken::Validation::default(),
+    )
+    .map_err(|_| AppError::Unauthorized("Invalid token".into()))?
+    .claims;
+
+    if claims.token_type != crate::models::user::TokenType::Access {
+        return Err(AppError::Unauthorized("Invalid token type".into()));
+    }
+
+    let org_id = claims.org;
+    Ok(ws.on_upgrade(move |socket| handle_live_feed(socket, state, org_id)))
 }
 
-async fn handle_live_feed(mut socket: WebSocket, state: Arc<AppState>) {
+async fn handle_live_feed(mut socket: WebSocket, state: Arc<AppState>, org_id: uuid::Uuid) {
     let mut ticker = interval(Duration::from_secs(2));
     let mut last_id: Option<uuid::Uuid> = None;
 
@@ -208,17 +228,19 @@ async fn handle_live_feed(mut socket: WebSocket, state: Arc<AppState>) {
 
         let query = if let Some(ref lid) = last_id {
             sqlx::query_as::<_, crate::models::audit::AuditLog>(
-                "SELECT * FROM audit_logs WHERE created_at > (
+                "SELECT * FROM audit_logs WHERE organization_id = $2 AND created_at > (
                     SELECT created_at FROM audit_logs WHERE id = $1
                 ) ORDER BY created_at ASC LIMIT 10"
             )
             .bind(lid)
+            .bind(org_id)
             .fetch_all(&state.db)
             .await
         } else {
             sqlx::query_as::<_, crate::models::audit::AuditLog>(
-                "SELECT * FROM audit_logs ORDER BY created_at DESC LIMIT 5"
+                "SELECT * FROM audit_logs WHERE organization_id = $1 ORDER BY created_at DESC LIMIT 5"
             )
+            .bind(org_id)
             .fetch_all(&state.db)
             .await
         };

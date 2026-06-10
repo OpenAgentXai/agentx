@@ -41,11 +41,21 @@ async fn main() -> anyhow::Result<()> {
     let redis_url = std::env::var("REDIS_URL")
         .unwrap_or_else(|_| "redis://localhost:6379".into());
 
+    const DEV_JWT_SECRET: &str = "agentx-dev-secret-change-in-production";
+    const DEV_ENCRYPTION_KEY: &str = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+
     let jwt_secret = std::env::var("JWT_SECRET")
-        .unwrap_or_else(|_| "agentx-dev-secret-change-in-production".into());
+        .unwrap_or_else(|_| DEV_JWT_SECRET.into());
 
     let encryption_key_hex = std::env::var("ENCRYPTION_KEY")
-        .unwrap_or_else(|_| "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef".into());
+        .unwrap_or_else(|_| DEV_ENCRYPTION_KEY.into());
+
+    // Release builds must never run with the dev fallback secrets
+    if !cfg!(debug_assertions)
+        && (jwt_secret == DEV_JWT_SECRET || encryption_key_hex == DEV_ENCRYPTION_KEY)
+    {
+        anyhow::bail!("JWT_SECRET and ENCRYPTION_KEY must be set in production");
+    }
 
     let encryption_key = hex::decode(&encryption_key_hex)
         .unwrap_or_else(|_| encryption_key_hex.as_bytes().to_vec());
@@ -69,8 +79,15 @@ async fn main() -> anyhow::Result<()> {
         encryption_key,
     });
 
+    let cors_origin = std::env::var("CORS_ORIGIN")
+        .unwrap_or_else(|_| "http://localhost:3000".into());
+
     let cors = CorsLayer::new()
-        .allow_origin("http://localhost:3000".parse::<HeaderValue>().unwrap())
+        .allow_origin(
+            cors_origin
+                .parse::<HeaderValue>()
+                .expect("CORS_ORIGIN must be a valid origin URL"),
+        )
         .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE, Method::OPTIONS])
         .allow_headers([
             axum::http::header::AUTHORIZATION,

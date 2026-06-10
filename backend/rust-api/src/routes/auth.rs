@@ -98,7 +98,8 @@ pub async fn login(
                     6,
                     1,
                     30,
-                    secret.as_bytes().to_vec(),
+                    totp_rs::Secret::Encoded(secret.clone()).to_bytes()
+                        .map_err(|e| AppError::Internal(format!("TOTP secret error: {:?}", e)))?,
                     Some("AgentX".to_string()),
                     user.email.clone(),
                 ).map_err(|e| AppError::Internal(format!("TOTP error: {}", e)))?;
@@ -322,7 +323,8 @@ pub async fn verify_2fa(
                 6,
                 1,
                 30,
-                secret.as_bytes().to_vec(),
+                totp_rs::Secret::Encoded(secret.clone()).to_bytes()
+                        .map_err(|e| AppError::Internal(format!("TOTP secret error: {:?}", e)))?,
                 Some("AgentX".to_string()),
                 user.email.clone(),
             ).map_err(|e| AppError::Internal(format!("TOTP error: {}", e)))?;
@@ -353,7 +355,8 @@ pub async fn verify_2fa(
         6,
         1,
         30,
-        secret.as_bytes().to_vec(),
+        totp_rs::Secret::Encoded(secret.clone()).to_bytes()
+                        .map_err(|e| AppError::Internal(format!("TOTP secret error: {:?}", e)))?,
         Some("AgentX".to_string()),
         claims.sub.to_string(),
     ).map_err(|e| AppError::Internal(format!("TOTP error: {}", e)))?;

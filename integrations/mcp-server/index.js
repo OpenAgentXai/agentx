@@ -15,7 +15,7 @@
  *     "mcpServers": {
  *       "agentx": {
  *         "command": "npx",
- *         "args": ["@agentx/mcp-server"],
+ *         "args": ["agentx-mcp-server"],
  *         "env": {
  *           "AGENTX_API_URL": "https://rust-api-production-9312.up.railway.app",
  *           "AGENTX_API_KEY": "agx_..."

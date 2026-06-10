@@ -26,6 +26,20 @@ Enterprises are deploying autonomous AI agents faster than they can govern them.
 
 **Live demo:** https://agentx-platform.netlify.app — `admin@agentx.dev` / `AgentX2024!`
 
+<div align="center">
+<img src="docs/assets/dashboard.png" alt="AgentX dashboard — real-time agent overview" width="80%" />
+<p><sub>The audit feed above shows a real agent being <b>denied</b> by the default-deny ABAC engine.</sub></p>
+</div>
+
+<details>
+<summary><b>More screenshots</b> — agents, policies, login</summary>
+<p align="center">
+<img src="docs/assets/agents.png" alt="Agent identities" width="49%" />
+<img src="docs/assets/policies.png" alt="ABAC policies and simulator" width="49%" />
+<img src="docs/assets/login.png" alt="Login (8 languages)" width="49%" />
+</p>
+</details>
+
 ## What you get
 
 | | |

@@ -1,5 +1,5 @@
 {
-  "name": "@agentx/mcp-server",
+  "name": "agentx-mcp-server",
   "version": "0.1.0",
   "description": "MCP server that puts any MCP-compatible AI agent under AgentX governance: permission checks, action declaration, audit trail, inter-agent messaging.",
   "type": "module",
@@ -22,5 +22,15 @@
     "governance",
     "agentx"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OpenAgentXai/agentx.git",
+    "directory": "integrations/mcp-server"
+  },
+  "homepage": "https://github.com/OpenAgentXai/agentx/tree/main/integrations/mcp-server",
+  "files": [
+    "index.js",
+    "README.md"
+  ]
 }

@@ -1,0 +1,23 @@
+# Environment
+.env
+.env.local
+.env.production
+
+# Rust
+backend/rust-api/target/
+
+# Node / Next.js
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+
+# Python
+backend/python-services/.venv/
+__pycache__/
+*.pyc
+
+# macOS
+.DS_Store
+
+# IDE / local
+.claude/settings.local.json

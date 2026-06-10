@@ -1,0 +1,80 @@
+# ==============================================================================
+# Stage 1: Build the Rust API binary
+# ==============================================================================
+FROM rust:1.77-slim-bookworm AS builder
+
+# Install system dependencies required by sqlx (OpenSSL, pkg-config) and curl
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    pkg-config \
+    libssl-dev \
+    libpq-dev \
+    ca-certificates \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /build
+
+# Copy the Cargo manifest first to cache dependency builds
+COPY backend/rust-api/Cargo.toml backend/rust-api/Cargo.lock* ./backend/rust-api/
+
+# Create a dummy main.rs to build dependencies separately (layer caching)
+RUN mkdir -p backend/rust-api/src && \
+    echo 'fn main() { println!("placeholder"); }' > backend/rust-api/src/main.rs
+
+# Copy database migrations directory since sqlx::migrate! references it at compile time
+COPY database/ ./database/
+
+WORKDIR /build/backend/rust-api
+
+# Build dependencies only (this layer is cached unless Cargo.toml changes)
+# Set SQLX_OFFLINE=true to avoid requiring a live database at compile time
+ENV SQLX_OFFLINE=true
+RUN cargo build --release 2>/dev/null || true
+
+# Remove the placeholder build artifacts so the real source triggers a rebuild
+RUN rm -rf src target/release/deps/agentx_api* target/release/agentx*
+
+# Now copy the actual source code
+COPY backend/rust-api/src/ ./src/
+
+# Build the final release binary
+RUN cargo build --release
+
+# ==============================================================================
+# Stage 2: Create the minimal runtime image
+# ==============================================================================
+FROM debian:bookworm-slim AS runtime
+
+# Install runtime dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    libssl3 \
+    libpq5 \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create a non-root user for security
+RUN groupadd --gid 1001 agentx && \
+    useradd --uid 1001 --gid agentx --shell /bin/false --create-home agentx
+
+WORKDIR /app
+
+# Copy the compiled binary from the builder stage
+COPY --from=builder /build/backend/rust-api/target/release/agentx-api ./agentx-api
+
+# Copy database migrations for runtime migration execution
+COPY database/ /app/database/
+
+# Set ownership
+RUN chown -R agentx:agentx /app
+
+USER agentx
+
+EXPOSE 8080
+
+ENV RUST_LOG=agentx_api=info,tower_http=info
+
+HEALTHCHECK --interval=10s --timeout=5s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:8080/health || exit 1
+
+CMD ["./agentx-api"]

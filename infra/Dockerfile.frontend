@@ -1,0 +1,86 @@
+# ==============================================================================
+# Stage 1: Install dependencies
+# ==============================================================================
+FROM node:20-alpine AS deps
+
+RUN apk add --no-cache libc6-compat
+
+WORKDIR /app
+
+# Copy package manifests for dependency installation (layer caching)
+COPY frontend/package.json frontend/package-lock.json* ./
+
+# Install dependencies -- prefer ci for reproducible builds, fall back to install
+RUN if [ -f package-lock.json ]; then \
+      npm ci --ignore-scripts; \
+    else \
+      npm install --ignore-scripts; \
+    fi
+
+# ==============================================================================
+# Stage 2: Build the Next.js application
+# ==============================================================================
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Copy installed node_modules from deps stage
+COPY --from=deps /app/node_modules ./node_modules
+
+# Copy the full frontend source
+COPY frontend/ ./
+
+# Set build-time environment variables
+ENV NEXT_TELEMETRY_DISABLED=1 \
+    NEXT_PUBLIC_API_URL=http://localhost:8080 \
+    NEXT_PUBLIC_ANALYTICS_URL=http://localhost:8000
+
+# Build the Next.js production bundle
+RUN npm run build
+
+# ==============================================================================
+# Stage 3: Production runtime
+# ==============================================================================
+FROM node:20-alpine AS runner
+
+RUN apk add --no-cache curl
+
+WORKDIR /app
+
+ENV NODE_ENV=production \
+    NEXT_TELEMETRY_DISABLED=1
+
+# Create non-root user
+RUN addgroup --system --gid 1001 agentx && \
+    adduser --system --uid 1001 agentx
+
+# Copy the Next.js standalone output (if output: 'standalone' is set in next.config)
+# Otherwise copy the full build output
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+
+# If standalone output is not configured, fall back to copying the full build
+# and using next start instead. Uncomment the lines below and comment out the
+# standalone COPY lines above if needed:
+# COPY --from=builder /app/.next ./.next
+# COPY --from=builder /app/node_modules ./node_modules
+# COPY --from=builder /app/package.json ./package.json
+
+RUN chown -R agentx:agentx /app
+
+USER agentx
+
+EXPOSE 3000
+
+ENV PORT=3000 \
+    HOSTNAME="0.0.0.0"
+
+HEALTHCHECK --interval=10s --timeout=5s --start-period=20s --retries=3 \
+    CMD curl -f http://localhost:3000 || exit 1
+
+# For standalone output:
+CMD ["node", "server.js"]
+
+# For non-standalone output, use:
+# CMD ["npx", "next", "start", "-H", "0.0.0.0"]

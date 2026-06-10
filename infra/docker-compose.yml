@@ -1,0 +1,126 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: agentx-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: agentx
+      POSTGRES_USER: agentx
+      POSTGRES_PASSWORD: agentx
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agentx -d agentx"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - agentx-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: agentx-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+    networks:
+      - agentx-network
+
+  rust-api:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.rust
+    container_name: agentx-rust-api
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://agentx:agentx@postgres:5432/agentx
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${JWT_SECRET:-agentx-dev-secret-change-in-production}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef}
+      RUST_LOG: ${RUST_LOG:-agentx_api=debug,tower_http=debug}
+      API_HOST: 0.0.0.0:8080
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - agentx-network
+
+  python-analytics:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.python
+    container_name: agentx-python-analytics
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://agentx:agentx@postgres:5432/agentx
+      REDIS_URL: redis://redis:6379
+      ANALYTICS_HOST: 0.0.0.0
+      ANALYTICS_PORT: "8000"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - agentx-network
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.frontend
+    container_name: agentx-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      rust-api:
+        condition: service_healthy
+      python-analytics:
+        condition: service_healthy
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8080
+      NEXT_PUBLIC_ANALYTICS_URL: http://localhost:8000
+    networks:
+      - agentx-network
+
+volumes:
+  pgdata:
+    driver: local
+  redisdata:
+    driver: local
+
+networks:
+  agentx-network:
+    driver: bridge

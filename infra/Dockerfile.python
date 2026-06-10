@@ -1,0 +1,42 @@
+# ==============================================================================
+# AgentX Python Analytics Service
+# ==============================================================================
+FROM python:3.12-slim AS base
+
+# Prevent Python from writing .pyc files and enable unbuffered stdout/stderr
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+# Install system dependencies required by asyncpg and scientific libs
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libpq-dev \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create a non-root user for security
+RUN groupadd --gid 1001 agentx && \
+    useradd --uid 1001 --gid agentx --shell /bin/false --create-home agentx
+
+WORKDIR /app
+
+# Install Python dependencies first (layer caching)
+COPY backend/python-services/requirements.txt ./requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the application source code
+COPY backend/python-services/app/ ./app/
+
+# Set ownership
+RUN chown -R agentx:agentx /app
+
+USER agentx
+
+EXPOSE 8000
+
+HEALTHCHECK --interval=10s --timeout=5s --start-period=15s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2", "--loop", "uvloop", "--http", "httptools", "--access-log"]

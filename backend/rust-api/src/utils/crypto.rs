@@ -38,7 +38,7 @@ pub fn generate_api_key() -> String {
 /// Get the prefix of an API key for display (first 8 chars after prefix)
 pub fn api_key_prefix(key: &str) -> String {
     if key.len() > 12 {
-        format!("{}...", &key[..12])
+        key[..12].to_string()
     } else {
         key.to_string()
     }
@@ -150,5 +150,27 @@ mod tests {
 
         let encrypted = encrypt(plaintext, &key1).unwrap();
         assert!(decrypt(&encrypted, &key2).is_err());
+    }
+
+    #[test]
+    fn test_api_key_hash_verifies() {
+        let key = generate_api_key();
+        let hash = hash_api_key(&key);
+        assert!(verify_password(&key, &hash).unwrap());
+    }
+
+    #[test]
+    fn test_encrypt_uses_random_nonce() {
+        let key = [7u8; 32];
+        let a = encrypt(b"same plaintext", &key).unwrap();
+        let b = encrypt(b"same plaintext", &key).unwrap();
+        assert_ne!(a, b);
+    }
+
+    #[test]
+    fn test_generate_token_length_and_uniqueness() {
+        let t = generate_token(32);
+        assert!(t.len() >= 32);
+        assert_ne!(t, generate_token(32));
     }
 }

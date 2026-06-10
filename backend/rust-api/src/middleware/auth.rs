@@ -125,7 +125,7 @@ pub async fn require_agent_auth(
          AND a.status = 'active'
          AND (c.expires_at IS NULL OR c.expires_at > NOW())"
     )
-    .bind(format!("{}...", key_prefix))
+    .bind(key_prefix)
     .fetch_optional(&state.db)
     .await?
     .ok_or_else(|| AppError::Unauthorized("Invalid or expired API key".into()))?;

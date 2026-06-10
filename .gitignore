@@ -27,3 +27,6 @@ __pycache__/
 
 # TS build cache
 frontend/tsconfig.tsbuildinfo
+
+# MCP server
+integrations/mcp-server/node_modules/

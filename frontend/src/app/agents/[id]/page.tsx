@@ -79,10 +79,9 @@ const statusVariant: Record<string, "success" | "warning" | "danger" | "default"
 };
 
 const credentialTypeOptions = [
-  { value: "api_key", label: "API Key" },
-  { value: "oauth2_token", label: "OAuth2 Token" },
+  { value: "apikey", label: "API Key" },
   { value: "jwt", label: "JWT" },
-  { value: "hmac", label: "HMAC Secret" },
+  { value: "certificate", label: "Certificate (mTLS)" },
 ];
 
 const tabs: { key: TabKey; label: string; icon: React.ElementType }[] = [
@@ -103,7 +102,7 @@ export default function AgentDetailPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showRevokeConfirm, setShowRevokeConfirm] = useState(false);
   const [newCredName, setNewCredName] = useState("");
-  const [newCredType, setNewCredType] = useState("api_key");
+  const [newCredType, setNewCredType] = useState("apikey");
   const [createdKey, setCreatedKey] = useState<string | null>(null);
   const [copiedKey, setCopiedKey] = useState(false);
   const [copiedCredId, setCopiedCredId] = useState<string | null>(null);
@@ -154,7 +153,7 @@ export default function AgentDetailPage() {
     });
     setCreatedKey(result.data?.key || result.key || null);
     setNewCredName("");
-    setNewCredType("api_key");
+    setNewCredType("apikey");
   };
 
   const handleCloseCreateCred = () => {
@@ -162,7 +161,7 @@ export default function AgentDetailPage() {
     setCreatedKey(null);
     setCopiedKey(false);
     setNewCredName("");
-    setNewCredType("api_key");
+    setNewCredType("apikey");
   };
 
   const handleRevokeCredential = async (credId: string) => {

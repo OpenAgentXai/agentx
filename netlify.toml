@@ -1,0 +1,10 @@
+[build]
+  base = "frontend"
+  command = "npm run build"
+  publish = ".next"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# NEXT_PUBLIC_API_URL and NEXT_PUBLIC_ANALYTICS_URL are set in the
+# Netlify dashboard (they are baked into the bundle at build time).
